@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+<head>
+	<#include "/common/header.html" />
+	<title>用户登录日志 - ${appName!}</title>
+</head>
+<body>
+	<div class="panel panel-default data-panel">
+		<div class="panel-heading">用户登录日志</div>
+		<div class="panel-body">
+			<button class="btn btn-primary" id="refresh"><i class="fa fa-refresh"></i>刷新</button>
+			<div class="tool-right">
+				<input type="date" class="form-control startTime" placeholder="起始时间" />
+				<span>~</span>
+				<input type="date" class="form-control endTime" placeholder="截止时间" />
+				<button class="btn btn-primary" id="search-btn" style="margin-top: -2px;"><i class="fa fa-search"></i>查询</button>
+			</div>
+		</div>
+
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>登录名</th>
+					<th>IP地址</th>
+					<th>端口</th>
+					<th>设备类型</th>
+					<th>操作系统</th>
+					<th>浏览器标识</th>
+					<th>登录时间</th>
+					<th>登录结果</th>
+					<th>备注</th>
+				</tr>
+			</thead>
+
+			<tbody id="datagrid">
+				<tr><td colspan="9"><div class="text-center">数据加载中...</div></td></tr>
+			</tbody>
+		</table>
+		<div class="panel-footer">
+			<nav aria-label="Page navigation">
+				<ul class="pagination">
+					<li><a id="first-page" aria-label="First"><span
+							aria-hidden="true">&laquo;</span>
+					</a></li>
+					<li><a id="previous-page" aria-label="Previous"><span
+							aria-hidden="true">&lsaquo;</span>
+					</a></li>
+					<li><a><span id="pageNum">-</span>&nbsp;/&nbsp;<span
+							id="totalPage">-</span>
+					</a></li>
+					<li><a id="next-page" aria-label="Next"><span
+							aria-hidden="true">&rsaquo;</span>
+					</a></li>
+					<li><a id="last-page" aria-label="Last" id="last"><span
+							aria-hidden="true">&raquo;</span>
+					</a></li>
+				</ul>
+			
+				<span class="total">本页<span id="disp-num">-</span>条，共<span id="total-num">-</span>条</span>
+			</nav>
+		</div>
+	</div>
+
+	<#include "/common/alert.html" />
+	
+	<script type="text/javascript">
+		var pageNum = 1;
+		var totalPage = 0;
+		var totalNum = 0;
+
+		// 查询
+		function subval(val, len) {
+			return val.length > len ? (val.substr(0, len) + '...') : val;
+		}
+		Date.prototype.Format = function (fmt) { //author: meizz 
+		    var o = {
+		        "M+": this.getMonth() + 1, //月份 
+		        "d+": this.getDate(), //日 
+		        "h+": this.getHours(), //小时 
+		        "m+": this.getMinutes(), //分 
+		        "s+": this.getSeconds(), //秒 
+		        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+		        "S": this.getMilliseconds() //毫秒 
+		    };
+		    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+		    for (var k in o)
+		    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		    return fmt;
+		}
+		function formatDate(d) {
+			return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+		}
+		function query(pageNum) {
+			var startTime = $(".startTime").val();
+			var endTime = $(".endTime").val();
+			if (startTime != '') {
+				startTime += " 00:00:00";
+			}
+			if (endTime != '') {
+				endTime += " 23:59:59";
+			}
+			var pageSize = Math.floor((window.innerHeight - 207) / 40)
+			$.ajax({
+				url: '${base!}/manage/log/loginList',
+				type: 'post',
+				data: {
+					startTime: startTime,
+					endTime: endTime,
+					pageNum: pageNum,
+					pageSize: pageSize
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					var str = "";
+					if (res.data.length == 0) {
+						str += '<tr><td colspan="9"><div class="text-center">暂无数据</div></td></tr>';
+						pageNum = 0;
+						totalPage = 0;
+					} else {
+						pageNum = res.pageNum;
+						totalPage = Math.ceil(res.total / pageSize);
+						totalNum = res.total;
+						for (var i = 0; i < res.data.length; i++) {
+							str += '<tr>';
+							str += '<td>' + res.data[i].LOGIN_NAME + '</td>';
+							str += '<td>' + res.data[i].IP + '</td>';
+							str += '<td>' + res.data[i].PORT + '</td>';
+							str += '<td>' + res.data[i].DEVICE + '</td>';
+							str += '<td>' + res.data[i].OS + '</td>';
+							str += '<td>' + res.data[i].UA + '</td>';
+							str += '<td>' + formatDate(res.data[i].LOGIN_TIME) + '</td>';
+							str += '<td>' + (res.data[i].STATUS=='0'?'失败':'成功') + '</td>';
+							str += '<td>' + (res.data[i].NOTE == undefined ? '无' : res.data[i].NOTE) + '</td>';							
+							str += '</tr>';
+						}
+					}
+					$("#datagrid").html(str);
+					$("#pageNum").text(pageNum);
+					$("#totalPage").text(totalPage);
+					$("#total-num").text(totalNum);
+					$("#disp-num").text(res.data.length);
+				},
+				error: function () {
+					showError("查询失败，请稍后再试");
+				}
+			});
+		}
+		query(1);
+		
+		$("#refresh").click(function () {
+			query(1);
+		});
+	
+		// 搜索
+		$("#search-btn").click(function () {
+			query(1);
+		});
+		
+		// 分页
+		$("#first-page").click(function () {
+			if (totalPage > 0) {
+				pageNum = 1;
+				query(1);
+			}
+		});
+		$("#previous-page").click(function () {
+			if (totalPage > 0) {
+				if (pageNum > 1) {
+					pageNum--;	
+				}
+				query(pageNum);
+			}
+		});
+		$("#next-page").click(function () {
+			if (totalPage > 0) {
+				if (pageNum < totalPage) {
+					pageNum++;
+				}
+				query(pageNum);
+			}
+		});
+		$("#last-page").click(function () {
+			if (totalPage > 0) {
+				pageNum = totalPage;
+				query(totalPage);
+			}
+		});
+	</script>
+</body>
+</html>

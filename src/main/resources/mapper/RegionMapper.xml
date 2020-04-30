@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.RegionDao">
+
+    <select id="getRegionInfo" parameterType="Map" resultType="Map">
+		SELECT 
+			ID,
+			NAME,
+			FULL_NAME,
+			RANK,
+			PARENT_ID
+		FROM
+			EP_REGION
+		WHERE
+			DISABLED = '0'
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="rank != '' and rank != null">
+			AND RANK = #{rank}
+		</if>
+		<if test="parentId != '' and parentId != null">
+			AND PARENT_ID = #{parentId}
+		</if>
+		ORDER BY ID
+    </select>
+    
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.StatisticsDao">
+
+    <select id="getDailyLoginCount" parameterType="Map" resultType="Map">
+		SELECT DATE, COUNT FROM (
+			SELECT
+				DATE,
+				count( 1 ) COUNT 
+			FROM
+				( SELECT date_format( LOGIN_TIME, '%m-%d' ) AS date FROM ep_login_log WHERE STATUS = 1 ) t 
+			GROUP BY
+				date 
+			ORDER BY
+				date DESC 
+			LIMIT 0, 7 
+		) t2 
+		ORDER BY date
+    </select>
+    
+    <select id="getRoleUserCount" parameterType="Map" resultType="Map">
+ 	   SELECT
+			TYPE,
+			count( 1 ) COUNT 
+		FROM
+			ep_user 
+		WHERE
+			STATUS = 1 
+		GROUP BY
+			type 
+		ORDER BY
+			type
+    </select>
+    
+    <select id="getRegionUserCount" parameterType="Map" resultType="Map">
+	    SELECT
+			region CODE,
+			r.FULL_NAME NAME,
+			count( 1 ) COUNT 
+		FROM
+			ep_user u
+			LEFT JOIN ep_region r ON r.id = u.region 
+		WHERE
+			region IS NOT NULL 
+			AND region <![CDATA[ <> ]]> '' 
+			AND STATUS = 1 
+		GROUP BY
+			REGION 
+		ORDER BY
+			count
+		LIMIT 0, 15
+    </select>
+    
+    <select id="getHourlyLoginCount" parameterType="Map" resultType="Map">
+		SELECT
+			HOUR,
+			count( 1 ) COUNT 
+		FROM
+			( SELECT date_format( LOGIN_TIME, '%H' ) AS HOUR FROM ep_login_log WHERE STATUS = 1 ) t 
+		GROUP BY
+			HOUR 
+		ORDER BY
+			HOUR 
+    </select>
+    
+</mapper>

@@ -1,0 +1,92 @@
+﻿* {
+	margin: 0;
+	padding: 0;
+	font-size: 13px;
+	font-family: microsoft yahei;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	background: #fff;
+}
+
+header {
+	height: 70px;
+	padding: 0 10%;
+}
+
+#logo {
+	width: 50px;
+	height: 50px;
+	margin: 10px;
+}
+
+#logo-title {
+	font-size: 32px;
+	line-height: 32px;
+	position: relative;
+	top: 9px;
+}
+
+#logo-subtitle {
+	font-size: 18px;
+	line-height: 18px;
+	color: #888;
+	margin-left: 12px;
+	padding-left: 12px;
+	border-left: 1px solid #ccc;
+	position: relative;
+	top: 6px;
+}
+
+#container {
+	width: 100%;
+	min-height: 490px;
+	z-index: 999;
+}
+
+form {
+	margin: 0 12%;
+	padding: 20px 0;
+	position: relative;
+	z-index: 2;
+}
+
+/* 移动端 */
+label.hidden-md {
+	text-align: left;
+	margin-top: 6px;
+}
+
+/* PC端 */
+label.hidden-sm {
+	text-align: right;
+}
+
+#btns {
+	margin-top: 12px;
+	text-align: center;
+}
+
+#btns a {
+	width: 200px;
+}
+
+#captcha-div {
+	padding-left: 0 !important;	
+	padding-right: 0 !important;
+}
+	
+#get-captcha-div {
+	padding-right: 0 !important;
+}
+	
+#get-captcha {
+	width: 100%;
+}
+
+footer {
+	height: 70px;
+	text-align: center;
+}

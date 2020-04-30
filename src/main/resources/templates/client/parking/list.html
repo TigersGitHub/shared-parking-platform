@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <title>${appName!} - ${appDesc!}</title>
+    <style>
+    	#status-para {
+    		padding: 3px 0;
+    		color: gray;
+    	}
+    	
+    	#parking-list div {
+    		margin-bottom: 3px;
+    	}
+    	
+    	.label {
+    		margin-right: 6px;
+    	}
+    </style>
+</head>
+
+<body>
+	<#include "${base!}/common/pageHeader.html" />
+	<#include "${base!}/common/alert.html" />
+	
+	<ul class="list-group">
+		<li class="list-group-item">
+			<h4 class="list-group-item-heading">我的预约</h4>
+		</li>
+	</ul>
+	
+	<div class="list-group">
+		<a class="list-group-item" href="${base!}/client/parking/parking">预约停车</a>
+	</div>
+	
+	<#if record??>
+		<ul class="list-group" id="parking-list"></ul>
+	</#if>
+</body>
+
+<script type="text/javascript">
+	Date.prototype.Format = function (fmt) { //author: meizz 
+	    var o = {
+	        "M+": this.getMonth() + 1, //月份 
+	        "d+": this.getDate(), //日 
+	        "h+": this.getHours(), //小时 
+	        "m+": this.getMinutes(), //分 
+	        "s+": this.getSeconds(), //秒 
+	        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+	        "S": this.getMilliseconds() //毫秒 
+	    };
+	    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+	    for (var k in o)
+	    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	    return fmt;
+	}
+	
+	function formatDate(d) {
+		return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+	}
+	
+	function reload(record) {
+		if (record != '') {
+			var list = eval(record);
+			var str = '';
+			for (var i = 0; i < list.length; i++) {
+				str += '<li class="list-group-item">';
+				if (list[i].STATUS == '1') {
+					str += '<div><span class="label label-primary">待履约</span><b style="font-size: 1.2em;">' + list[i].PLATE_NUM + '</b>'
+						+ '<button style="float: right;" class="btn btn-xs btn-danger" onclick="cancel(\'' + list[i].ID + '\')"><i class="fa fa-trash"></i>取消预约</button></div>';
+					str += '<div>停车场：' + list[i].LOT_NAME + '</div>';
+					str += '<div>提交时间：' + formatDate(list[i].APPOINTMENT_TIME) + '</div>';
+					str += '<div>预计到达：' + formatDate(list[i].ARRIVE_TIME) + '</div>';
+				} else if (list[i].STATUS == '2') {
+					str += '<div><span class="label label-success">已履约</span><b style="font-size: 1.2em;">' + list[i].PLATE_NUM + '</b></div>';
+					str += '<div>停车场：' + list[i].LOT_NAME + '</div>';
+					str += '<div>提交时间：' + formatDate(list[i].APPOINTMENT_TIME) + '</div>';
+					str += '<div>预计到达：' + formatDate(list[i].ARRIVE_TIME) + '</div>';
+					str += '<div>履约时间：' + formatDate(list[i].PERFORMANCE_TIME) + '</div>';
+					str += '</li>';
+				} else if (list[i].STATUS == '3') {
+					str += '<div><span class="label label-danger">已取消</span><b style="font-size: 1.2em;">' + list[i].PLATE_NUM + '</b></div>';
+					str += '<div>停车场：' + list[i].LOT_NAME + '</div>';
+					str += '<div>提交时间：' + formatDate(list[i].APPOINTMENT_TIME) + '</div>';
+					str += '<div>预计到达：' + formatDate(list[i].ARRIVE_TIME) + '</div>';
+					str += '</li>';
+				}
+			}
+			$("#parking-list").html(str);
+		}
+	}
+	
+	var arr = '${record!}';
+	reload(arr);
+
+	function cancel(id) {
+		showConfirm("真的要取消预约？", function () {
+			$.ajax({
+				url: "${base!}/client/parking/cancel",
+				type: "post",
+				async: false,
+				data: {
+					"id": id
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						showInfo("预约取消成功！");
+						$.ajax({
+							url: "${base!}/client/parking/reload",
+							type: "post",
+							async: false,
+							success: function (resp) {
+								var res = eval('('+resp+')');
+								if (res.code && res.code == '1') {
+									reload(res.data);
+								}
+							}
+						});
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("操作失败，请稍后再试");
+				}
+			});
+		});
+	}
+</script>
+</html>

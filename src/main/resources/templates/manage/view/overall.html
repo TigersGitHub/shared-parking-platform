@@ -1,0 +1,374 @@
+<!doctype html>
+<html>
+<head>
+	<#include "/common/header.html" />
+	<title>运营总览 - ${appName!}</title>
+	<style type="text/css">
+		.statistics {
+			padding: 9px;
+		}
+		.statistics-box {
+			margin: 0;
+		}
+		.statistics-box .panel-heading {
+			font-weight: bold;
+			background-color: #fff;
+			color: #666;
+		}
+		#user-num i {
+			color: #337ab7;
+		}
+		#lot-num i {
+			color: #5cb85c;
+		}
+		#car-num i {
+			color: #e29200;
+		}
+		#place-num i {
+			color: #800080;
+		}
+		.statistics-box .panel-body {
+			font-size: 36px;
+			font-weight: bold;
+		}
+		.statistics-box .panel-body .num-field {
+			float: right;
+			color: #666;
+		}
+	</style>
+</head>
+<body>
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="user-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>平台用户总数</div>
+			<div class="panel-body">
+				<i class="fa fa-users"></i>
+				<span class="num-field">${user!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="lot-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>入驻停车场总数</div>
+			<div class="panel-body">
+				<i class="fa fa-product-hunt"></i>
+				<span class="num-field">${lot!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="car-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>申报车辆总数</div>
+			<div class="panel-body">
+				<i class="fa fa-car"></i>
+				<span class="num-field">${car!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="place-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>申报车位总数</div>
+			<div class="panel-body">
+				<i class="fa fa-road"></i>
+				<span class="num-field">${place!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default statistics-box">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>用户登录情况统计</div>
+			<div class="panel-body">
+				<div class="chart" id="login-chart"></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default statistics-box">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>用户角色分布统计</div>
+			<div class="panel-body">
+				<div class="chart" id="role-chart"></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default statistics-box">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>用户来源地区统计</div>
+			<div class="panel-body">
+				<div class="chart" id="area-chart"></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default statistics-box">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>高峰使用时段统计</div>
+			<div class="panel-body">
+				<div class="chart" id="time-chart"></div>
+			</div>
+		</div>
+	</div>
+	
+	<#include "/common/alert.html" />
+	
+	<script type="text/javascript">
+		var loginChartName = [];
+		var loginChartData = [];
+		var roleChartData = [];
+		var regionChartName = [];
+		var regionChartData = [];
+		var hourlyChartName = [];
+		var hourlyChartData = [];
+	
+		$(".chart").css("height", $(".chart").width() * 0.5);
+		queryLoginChart();
+		loadLoginChart();
+		queryRoleChart();
+		loadRoleChart();
+		queryAreaChart();
+		loadAreaChart();
+		queryTimeChart();
+		loadTimeChart();
+		
+		$(window).resize(function () {
+			$(".chart").css("height", $(".chart").width() * 0.5);
+			loadLoginChart();
+			loadRoleChart();
+			loadAreaChart();
+			loadTimeChart();
+		});
+		
+		function queryLoginChart() {
+			$.ajax({
+				url: "${base!}/manage/view/getDailyLoginCount",
+				type: "post",
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						for (var i = 0; i < res.data.length; i++) {
+							loginChartName[i] = res.data[i].DATE;
+							loginChartData[i] = res.data[i].COUNT;
+						}
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("用户登录情况查询失败，请稍后再试");
+				}
+			});
+		}
+		
+		function loadLoginChart() {
+	        var myChart = echarts.init(document.getElementById('login-chart'));
+	        var option = {
+	            xAxis: {
+	            	name: '日期',
+	                type: 'category',
+	                data: loginChartName
+	            },
+	            yAxis: {
+	            	name: '登录人次',
+	                type: 'value'
+	            },
+	            grid: {
+	            	top: 36,
+	            	left: 60,
+	            	right: 48,
+	            	bottom: 32
+	            },
+	            color: ['#337ab7'],
+	            series: [{
+	                data: loginChartData,
+	                type: 'line'
+	            }]
+	        };
+	        myChart.setOption(option);
+		}
+		
+		function queryRoleChart() {
+			$.ajax({
+				url: "${base!}/manage/view/getRoleUserCount",
+				type: "post",
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						for (var i = 0; i < res.data.length; i++) {
+							roleChartData[i] = {
+								name: res.data[i].TYPE,
+								value: res.data[i].COUNT
+							}
+						}
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("用户角色分布查询失败，请稍后再试");
+				}
+			});
+		}
+		
+		function loadRoleChart() {
+	        var myChart = echarts.init(document.getElementById('role-chart'));
+	        var option = {
+	            grid: {
+	            	top: 24,
+	            	left: 60,
+	            	right: 32,
+	            	bottom: 32
+	            },
+	            color: ['#8278e9', '#ffae1b', '#e060b0'],
+	            series: [
+	                {
+	                    name: '访问来源',
+	                    type: 'pie',
+	                    radius: ['50%', '80%'],
+	                    avoidLabelOverlap: false,
+	                    label: {
+	                        show: false,
+	                        position: 'center'
+	                    },
+	                    emphasis: {
+	                        label: {
+	                            show: true,
+	                            fontSize: '30',
+	                            fontWeight: 'bold'
+	                        }
+	                    },
+	                    labelLine: {
+	                        show: false
+	                    },
+	                    data: roleChartData
+	                }
+	            ]
+	        };
+	        myChart.setOption(option);
+		}
+
+		function queryAreaChart() {
+			$.ajax({
+				url: "${base!}/manage/view/getRegionUserCount",
+				type: "post",
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						for (var i = 0; i < res.data.length; i++) {
+							regionChartName[i] = res.data[i].NAME;
+							regionChartData[i] = res.data[i].COUNT;
+						}
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("用户地区分布查询失败，请稍后再试");
+				}
+			});
+		}
+		
+		function loadAreaChart() {
+	        var myChart = echarts.init(document.getElementById('area-chart'));
+	        var option = {
+	            grid: {
+	            	top: 24,
+	            	left: 24,
+	            	right: 60,
+	            	bottom: 24,
+	                containLabel: true
+	            },
+	            color: ['#5cb85c'],
+	            xAxis: [
+	            	{
+		            	name: '用户数',
+                    	type: 'value'
+                	}
+            	],
+	            yAxis: [
+	                {
+	                    type: 'category',
+	                    axisTick: {
+	                        show: false
+	                    },
+	                    data: regionChartName
+	                }
+	            ],
+	            series: [
+	                {
+	                    type: 'bar',
+	                    label: {
+	                        show: true,
+	                        position: 'inside'
+	                    },
+	                    data: regionChartData
+	                }
+	            ]
+	        };
+	        myChart.setOption(option);
+		}
+		
+		function queryTimeChart() {
+			$.ajax({
+				url: "${base!}/manage/view/getHourlyLoginCount",
+				type: "post",
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						for (var i = 0; i < res.data.length; i++) {
+							hourlyChartName[i] = res.data[i].HOUR;
+							hourlyChartData[i] = res.data[i].COUNT;
+						}
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("高峰使用时段查询失败，请稍后再试");
+				}
+			});
+		}
+		
+		function loadTimeChart() {
+	        var myChart = echarts.init(document.getElementById('time-chart'));
+	        var option = {
+	            grid: {
+	            	top: 36,
+	            	left: 60,
+	            	right: 48,
+	            	bottom: 32
+	            },
+	            color: ['#844984'],
+	            xAxis: {
+	            	name: '时',
+	                data: hourlyChartName
+	            },
+	            yAxis: {
+	            	name: '登录人次'
+	            },
+	            series: [{
+	                name: 'bar',
+	                type: 'bar',
+	                data: hourlyChartData,
+	                animationDelay: function (idx) {
+	                    return idx * 10;
+	                }
+	            }],
+	            animationEasing: 'elasticOut',
+	            animationDelayUpdate: function (idx) {
+	                return idx * 5;
+	            }
+	        };
+	        myChart.setOption(option);
+		}
+    </script>
+</body>
+</html>

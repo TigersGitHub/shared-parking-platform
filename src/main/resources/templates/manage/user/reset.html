@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+	<#include "/common/header.html" />
+	<title>重置密码 - ${appName!}</title>
+	<style type="text/css">
+		#org_id_group {
+			display: none;
+		}
+	</style>
+</head>
+<body>
+	<div class="panel panel-default data-panel">
+		<div class="panel-heading">重置密码</div>
+		<div class="panel-body">
+			<form id="resetpw-form">
+				<div class="row">
+					<label class="col-xs-3 text-right" for="oldpw"><span class="text-require">*</span>旧密码</label>
+					<div class="col-xs-5">
+						<input class="form-control" type="password" placeholder="旧密码" id="oldpw" name="oldpw" />
+					</div>
+				</div>
+				<div class="row">
+					<label class="col-xs-3 text-right" for="newpw"><span class="text-require">*</span>新密码</label>
+					<div class="col-xs-5">
+						<input class="form-control" type="password" placeholder="新密码" id="newpw" name="newpw" />
+					</div>
+				</div>
+				<div class="row">
+					<label class="col-xs-3 text-right" for="newpw2"><span class="text-require">*</span>再次输入新密码</label>
+					<div class="col-xs-5">
+						<input class="form-control" type="password" placeholder="再次输入新密码" id="newpw2" name="newpw2" />
+					</div>
+				</div>
+				<div class="row text-center">
+					<button type="button" class="btn btn-primary" id="save">提&nbsp;&nbsp;交</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<#include "/common/alert.html" />
+	
+	<script type="text/javascript">
+		$("#save").click(function () {
+			if ($("#oldpw").val() == '') {
+				showWarning("旧密码不能为空！");
+				return;
+			}
+			if ($("#newpw").val() == '') {
+				showWarning("新密码不能为空！");
+				return;
+			}
+			if ($("#newpw2").val() == '') {
+				showWarning("确认密码不能为空！");
+				return;
+			}
+			if ($("#newpw").val() != $("#newpw2").val()) {
+				showWarning("新密码与确认密码不一致！");
+				return;
+			}
+			$.ajax({
+				url: "${base!}/client/user/savePassword",
+				type: "post",
+				async: false,
+				data: {
+					"oldpw": $.md5($("#oldpw").val()),
+					"newpw": $.md5($("#newpw").val())
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						showInfo("密码修改成功！请重新登录");
+						setTimeout(function () {
+							window.location.href = "${base!}/logout";
+						}, 1500);
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("提交失败，请稍后再试");
+				}
+			});
+		});
+	</script>
+</body>
+</html>

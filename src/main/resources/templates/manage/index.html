@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <title>运营管理中心 - ${appName!}</title>
+    <style type="text/css">
+    	#menu {
+    		position: fixed;
+    		top: 50px;
+    		left: 0;
+    		width: 200px;
+    		height: 300px;
+     		background-color: rgb(248,248,248);
+    	}
+    	#menu>ul {
+     		padding: 12px 0;
+    		height: 100%;
+    		overflow-y: scroll;
+    	}
+    	#menu>ul::-webkit-scrollbar {
+			width: 0;
+		}
+    	#menu li a {
+    		border-radius: 0;
+    	}
+    	#menu li a.no-hover:hover {
+    		color: #337ab7;
+    		background-color: rgb(248,248,248);
+    	}
+    	#menu .child-nav li a {
+    		margin-left: 24px;
+    	}
+    	#manage-frame {
+   		    position: fixed;
+    		top: 50px;
+			left: 200px;
+			border: 0;
+    	}
+    </style>
+</head>
+<body>
+	<#include "${base!}/common/pageHeaderManage.html" />
+	
+	<nav id="menu">
+		<ul class="nav nav-pills nav-stacked">
+			<#if type?? && type == '2'>
+				<li role="presentation" class="active menu-item"><a href="${base!}/manage/view/overall" target="manage-frame"><i class="fa fa-pie-chart"></i>运营总览</a></li>
+				<li role="presentation">
+					<a class="no-hover"><i class="fa fa-bars"></i>基础数据</a>
+					<ul class="nav nav-pills nav-stacked child-nav">
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/user/index" target="manage-frame"><i class="fa fa-users"></i>用户信息管理</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/org/index" target="manage-frame"><i class="fa fa-map-o"></i>物业组织机构管理</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/car/index" target="manage-frame"><i class="fa fa-car"></i>用户车辆信息管理</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/parkingPlace/index" target="manage-frame"><i class="fa fa-road"></i>租售车位信息管理</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/parkingLot/index" target="manage-frame"><i class="fa fa-product-hunt"></i>停车场信息管理</a></li>
+					</ul>
+				</li>
+				<li role="presentation">
+					<a class="no-hover"><i class="fa fa-bars"></i>信息审核</a>
+					<ul class="nav nav-pills nav-stacked child-nav">
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/audit/user" target="manage-frame"><i class="fa fa-check-square-o"></i>实名认证审核</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/audit/car" target="manage-frame"><i class="fa fa-check-square"></i>车辆信息审核</a></li>
+					</ul>
+				</li>
+				<li role="presentation">
+					<a class="no-hover"><i class="fa fa-bars"></i>运营日志</a>
+					<ul class="nav nav-pills nav-stacked child-nav">
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/log/loginlog" target="manage-frame"><i class="fa fa-file-text"></i>用户登录日志</a></li>
+						<li role="presentation" class="menu-item"><a href="${base!}/manage/log/auditlog" target="manage-frame"><i class="fa fa-file-text-o"></i>信息审核日志</a></li>
+					</ul>
+				</li>
+			</#if>
+			<#if type?? && type == '3'>
+				<li role="presentation" class="active menu-item"><a href="${base!}/manage/view/lotOverall" target="manage-frame"><i class="fa fa-pie-chart"></i>停车场总览</a></li>
+				<li role="presentation" class="menu-item"><a href="${base!}/manage/parkingPlace/index" target="manage-frame"><i class="fa fa-road"></i>租售车位信息管理</a></li>
+				<li role="presentation" class="menu-item"><a href="${base!}/manage/audit/place" target="manage-frame"><i class="fa fa-check-square-o"></i>租售车位信息审核</a></li>
+			</#if>
+		</ul>
+	</nav>
+	
+	<#if type?? && type == '2'>
+		<iframe id="manage-frame" name="manage-frame" src="${base!}/manage/view/overall"></iframe>
+	</#if>
+	<#if type?? && type == '3'>
+		<iframe id="manage-frame" name="manage-frame" src="${base!}/manage/view/lotOverall"></iframe>
+	</#if>
+	
+	<#include "${base!}/common/pageFooterManage.html" />
+</body>
+
+<script>
+	$(function () {
+		$("#menu").css("height", window.innerHeight - 90);
+		$("#manage-frame").attr("width", window.innerWidth - 200);
+		$("#manage-frame").attr("height", window.innerHeight - 90);
+		
+		$(window).resize(function () {
+			$("#menu").css("height", window.innerHeight - 90);
+			$("#manage-frame").attr("width", window.innerWidth - 200);
+			$("#manage-frame").attr("height", window.innerHeight - 90);
+		});
+		
+		$('.nav-pills').find('li.menu-item').click(function () {
+			$('.nav-pills').find('li.menu-item').removeClass('active');
+			$(this).addClass('active');
+        });
+	});
+</script>
+
+</html>

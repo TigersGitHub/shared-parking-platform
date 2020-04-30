@@ -1,0 +1,30 @@
+<style type="text/css">
+	.page-footer {
+		font-size: 14px;
+		padding: 24px 0;
+		color: white;
+		text-align: center;
+	}
+</style>
+
+<div id="page-footer" class="page-footer">
+	<a id="back-to-index" href="/index" class="btn" target="_parent">返回首页</a>
+    <div class="page-footer-inner"><b id="copyright"></b>&nbsp;&copy;&nbsp;易停&nbsp;&nbsp;Easy Parking</div>
+</div>
+<div class="page-footer-blank"></div>
+<script>
+	$(function () {
+        var year = new Date().getFullYear();
+        if (year > 2019) {
+        	$("#copyright").html("2019-"+year);
+        } else {
+        	$("#copyright").html(year);
+        }
+        
+        $(".page-footer-blank").css("height", $(window).height() - $(".page-footer").position().top - $(".page-footer").outerHeight());
+        
+        $(window).resize(function () {
+    	    $(".page-footer-blank").css("height", $(window).height() - $(".page-footer").position().top - $(".page-footer").outerHeight());	
+        })
+    });
+</script>

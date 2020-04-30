@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.ParkingLotDao">
+
+    <select id="getParkingLotSelector" parameterType="Map" resultType="Map">
+		SELECT 
+			lot.ID,
+			lot.NAME,
+			lot.TYPE,
+			live.TOTAL_NUM,
+			live.LIVE_NUM,
+			lot.PRICE,
+			lot.CAPPED,
+			lot.CAPPED_PRICE,
+			lot.REGION,
+			lot.ADDRESS,
+			lot.ORG_ID
+		FROM
+			EP_PARKING_LOT lot
+			LEFT JOIN ep_parking_lot_live live on lot.ID = live.LOT_ID
+		WHERE
+			STATUS = '1'
+			AND DISABLED = '0'
+			AND REGION = #{region}
+		ORDER BY CREATE_TIME
+    </select>
+    
+    <select id="getParkingLotByPage" parameterType="Map" resultType="Map">
+    	SELECT 
+			t.ID,
+			t.NAME,
+			t.TYPE,
+			t.PLACE_NUM,
+			t.PRICE,
+			t.CAPPED,
+			t.CAPPED_PRICE,
+			r.FULL_NAME REGION,
+			t.ADDRESS,
+			t.ORG_ID,
+			t.STATUS,
+			t.DISABLED,
+			t.CREATOR,
+			t.CREATE_TIME,
+			t.UPDATOR,
+			t.UPDATE_TIME
+		FROM
+			EP_PARKING_LOT t
+			LEFT JOIN EP_REGION r on t.REGION = r.ID
+		WHERE 
+			t.STATUS = 1
+		<if test="name != '' and name != null">
+			AND t.NAME = #{name}
+		</if>
+		<if test="type != '' and type != null">
+			AND t.TYPE = #{type}
+		</if>
+		ORDER BY t.CREATE_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getParkingLotCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_PARKING_LOT
+		WHERE 
+			STATUS = 1
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="type != '' and type != null">
+			AND TYPE = #{type}
+		</if>
+    </select>
+    
+    <insert id="insertParkingLot" parameterType="Map">
+    	INSERT INTO EP_PARKING_LOT
+    		(ID, NAME, TYPE, PLACE_NUM, PRICE, CAPPED, CAPPED_PRICE, REGION, 
+    		ADDRESS, ORG_ID, CREATOR)
+    	VALUES
+			(#{id}, #{name}, #{type}, #{place_num}, #{price}, #{capped}, #{capped_price}, 
+			#{region}, #{address}, #{org_id}, #{creator})
+    </insert>
+    
+    <update id="updateParkingLot" parameterType="Map">
+    	UPDATE
+			EP_PARKING_LOT
+    	SET
+			NAME = #{name},
+			TYPE = #{type},
+			PLACE_NUM = #{place_num},
+			PRICE = #{price},
+			CAPPED = #{capped},
+			CAPPED_PRICE = #{capped_price},
+			REGION = #{region},
+			ADDRESS = #{address},
+			ORG_ID = #{org_id},
+			UPDATOR = #{updator}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="deleteParkingLot" parameterType="Map">
+    	UPDATE
+			EP_PARKING_LOT
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="enableParkingLot" parameterType="Map">
+    	UPDATE
+			EP_PARKING_LOT
+    	SET
+			DISABLED = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="disableParkingLot" parameterType="Map">
+    	UPDATE
+			EP_PARKING_LOT
+    	SET
+			DISABLED = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <insert id="insertLotUser" parameterType="Map">
+    	INSERT INTO EP_USER_LOT
+    		(ID, LOT_ID, USER_ID, CREATOR)
+    	VALUES
+    		(#{id}, #{lot_id}, #{user_id}, #{creator})
+    </insert>
+    
+    <update id="deleteLotUser" parameterType="Map">
+    	UPDATE
+			EP_USER_LOT
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+	<select id="getLotUsers" parameterType="Map" resultType="Map">
+    	SELECT
+			l.ID,
+			l.LOT_ID,
+			lot.NAME,
+			u.ACCOUNT,
+			u.NAME,
+			l.CREATE_TIME 
+		FROM
+			EP_USER_LOT l
+			LEFT JOIN ep_user u ON l.USER_ID = u.ID
+			LEFT JOIN ep_parking_lot lot on lot.ID = l.LOT_ID 	
+		WHERE 
+			l.STATUS = 1
+		<if test="lot_id != '' and lot_id != null">
+			AND l.LOT_ID = #{lot_id}
+		</if>
+		<if test="user_id != '' and user_id != null">
+			AND l.USER_ID = #{user_id}
+		</if>
+		ORDER BY l.CREATE_TIME
+    </select>
+    
+    <insert id="addParkingAppointment" parameterType="Map">
+    	INSERT INTO EP_PARKING_APPOINTMENT
+    		(ID, USER_ID, LOT_ID, CAR_ID, APPOINTMENT_TIME, ARRIVE_TIME)
+   		VALUES
+   			(#{id}, #{user_id}, #{lot_id}, #{car_id}, #{appointment_time}, #{arrive_time})
+    </insert>
+    
+    <update id="minusParkingLotLiveNum" parameterType="Map">
+    	update
+			ep_parking_lot_live
+    	set
+			live_num = live_num - 1
+    	where 
+    		lot_id = #{lot_id}
+    		and live_num > 0
+    </update>
+    
+    <update id="addUpParkingLotLiveNum" parameterType="Map">
+    	update
+			ep_parking_lot_live
+    	set
+			live_num = live_num + 1
+    	where 
+    		lot_id = #{lot_id}
+    </update>
+    
+    <update id="writeOffParkingAppointment" parameterType="Map">
+    	update
+    		EP_PARKING_APPOINTMENT
+    	set 
+    		status = '2'
+    		and performance_time = #{performance_time}
+    	where
+    		id = #{id}
+    </update>
+    
+    <update id="cancelParkingAppointment" parameterType="Map">
+    	update
+    		EP_PARKING_APPOINTMENT
+    	set 
+    		status = '3'
+    	where
+    		id = #{id}
+    </update>
+    
+    <select id="getAppointmentInfoByUser" parameterType="Map" resultType="Map">
+    	SELECT
+			a.ID,
+			a.LOT_ID,
+			lot.NAME LOT_NAME,
+			c.PLATE_NUM,
+			a.APPOINTMENT_TIME,
+			a.ARRIVE_TIME,
+			a.PERFORMANCE_TIME,
+			a.STATUS
+		FROM
+			EP_PARKING_APPOINTMENT a
+			left join EP_PARKING_LOT lot on lot.ID = a.LOT_ID
+			left join EP_CAR c on c.ID = a.CAR_ID 
+		WHERE 1=1
+		<if test="id != '' and id != null">
+			AND a.user_id = #{id}
+		</if>
+		ORDER BY a.APPOINTMENT_TIME desc
+    </select>
+    
+</mapper>

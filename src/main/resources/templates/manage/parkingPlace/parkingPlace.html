@@ -1,0 +1,275 @@
+<!doctype html>
+<html>
+<head>
+	<#include "/common/header.html" />
+	<title>租售车位信息管理 - ${appName!}</title>
+	<style>
+		#lot_id {
+			width: 220px;
+		}
+	</style>
+</head>
+<body>
+	<div class="panel panel-default data-panel">
+		<div class="panel-heading">租售车位信息管理</div>
+		<div class="panel-body">
+			<button class="btn btn-primary" id="refresh"><i class="fa fa-refresh"></i>刷新</button>
+			<div class="tool-right">
+				<select class="form-control lot_id" id="lot_id">
+					<option value="">所属停车场</option>
+				</select>
+				<input type="text" class="form-control owner" placeholder="所有者" />
+				<button class="btn btn-primary" id="search-btn"><i class="fa fa-search"></i>查询</button>
+			</div>
+		</div>
+
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>所属停车场</th>
+					<th>车位编号</th>
+					<th>所有者</th>
+					<th>交易状态</th>
+					<th>最后修改时间</th>
+					<th>禁用否</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+
+			<tbody id="datagrid">
+				<tr><td colspan="7"><div class="text-center">数据加载中...</div></td></tr>
+			</tbody>
+		</table>
+		<div class="panel-footer">
+			<nav aria-label="Page navigation">
+				<ul class="pagination">
+					<li><a id="first-page" aria-label="First"><span
+							aria-hidden="true">&laquo;</span>
+					</a></li>
+					<li><a id="previous-page" aria-label="Previous"><span
+							aria-hidden="true">&lsaquo;</span>
+					</a></li>
+					<li><a><span id="pageNum">-</span>&nbsp;/&nbsp;<span
+							id="totalPage">-</span>
+					</a></li>
+					<li><a id="next-page" aria-label="Next"><span
+							aria-hidden="true">&rsaquo;</span>
+					</a></li>
+					<li><a id="last-page" aria-label="Last" id="last"><span
+							aria-hidden="true">&raquo;</span>
+					</a></li>
+				</ul>
+			
+				<span class="total">本页<span id="disp-num">-</span>条，共<span id="total-num">-</span>条</span>
+			</nav>
+		</div>
+	</div>
+
+	<#include "/common/alert.html" />
+	
+	<script type="text/javascript">
+		var pageNum = 1;
+		var totalPage = 0;
+		var totalNum = 0;
+		
+		// 初始化停车场
+		function loadLot(id) {
+			$.ajax({
+				url: '${base!}/manage/parkingLot/select',
+				type: 'post',
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					var str = "<option value=''>所属停车场</option>";
+					for (var i = 0; i < res.data.length; i++) {
+						str += "<option value='" + res.data[i].ID + "'>" + res.data[i].NAME + "</option>";
+					}
+					$("#" + id).html(str);
+				},
+				error: function () {
+					showError("所属停车场加载失败，请稍后再试");
+				}
+			});
+		}
+		
+		loadLot("lot_id");
+
+		// 查询
+		function subval(val, len) {
+			return val.length > len ? (val.substr(0, len) + '...') : val;
+		}
+		Date.prototype.Format = function (fmt) { //author: meizz 
+		    var o = {
+		        "M+": this.getMonth() + 1, //月份 
+		        "d+": this.getDate(), //日 
+		        "h+": this.getHours(), //小时 
+		        "m+": this.getMinutes(), //分 
+		        "s+": this.getSeconds(), //秒 
+		        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+		        "S": this.getMilliseconds() //毫秒 
+		    };
+		    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+		    for (var k in o)
+		    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		    return fmt;
+		}
+		function formatDate(d) {
+			return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+		}
+		function decodeTrade(str) {
+			switch (str) {
+			case "1":
+				return "挂牌中";
+			case "2":
+				return "已完成";
+			case "0":
+				return "未挂牌";
+			default:
+				return "";
+			}
+		}
+		function query(pageNum) {
+			var owner = $(".owner").val();
+			var lot_id = $(".lot_id").val();
+			var pageSize = Math.floor((window.innerHeight - 207) / 40)
+			$.ajax({
+				url: '${base!}/manage/parkingPlace/list',
+				type: 'post',
+				data: {
+					owner: owner,
+					lot_id: lot_id,
+					pageNum: pageNum,
+					pageSize: pageSize
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					var str = "";
+					if (res.data.length == 0) {
+						str += '<tr><td colspan="7"><div class="text-center">暂无数据</div></td></tr>';
+						pageNum = 0;
+						totalPage = 0;
+					} else {
+						pageNum = res.pageNum;
+						totalPage = Math.ceil(res.total / pageSize);
+						totalNum = res.total;
+						for (var i = 0; i < res.data.length; i++) {
+							str += '<tr>';
+							str += '<td>' + res.data[i].LOT_NAME + '</td>';
+							str += '<td>' + res.data[i].PLACE_CODE + '</td>';
+							if (res.data[i].OWNER_TYPE == '1') {
+								str += '<td>' + res.data[i].OWNER_ORG + '</td>';
+							} else {
+								str += '<td>' + res.data[i].OWNER + '</td>';	
+							}
+							str += '<td>' + decodeTrade(res.data[i].TRADE) + '</td>';
+							str += '<td>' + formatDate(res.data[i].UPDATE_TIME) + '</td>';
+							str += '<td>' + (res.data[i].DISABLED=='0'?'否':'是') + '</td><td>';
+							str += '<button class="btn btn-xs btn-primary" onclick="view(\'' + res.data[i].ID + '\')">查看</button>';
+							if (res.data[i].DISABLED == '0') {
+								str += '<button class="btn btn-xs btn-warning" onclick="disable(\'' + res.data[i].ID + '\')">禁用</button>';	
+							} else {
+								str += '<button class="btn btn-xs btn-success" onclick="enable(\'' + res.data[i].ID + '\')">启用</button>';
+							}	
+							str += '</td></tr>';
+						}
+					}
+					$("#datagrid").html(str);
+					$("#pageNum").text(pageNum);
+					$("#totalPage").text(totalPage);
+					$("#total-num").text(totalNum);
+					$("#disp-num").text(res.data.length);
+				},
+				error: function () {
+					showError("查询失败，请稍后再试");
+				}
+			});
+		}
+		query(1);
+		
+		function disable(id) {
+			$.ajax({
+				url: "${base!}/manage/parkingPlace/disable",
+				type: "post",
+				async: false,
+				data: {
+					"id": id
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						showInfo("禁用成功");
+						query(1);
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("禁用失败，请稍后再试");
+				}
+			});
+		}
+		
+		function enable(id) {
+			$.ajax({
+				url: "${base!}/manage/parkingPlace/enable",
+				type: "post",
+				async: false,
+				data: {
+					"id": id
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						showInfo("启用成功");
+						query(1);
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("启用失败，请稍后再试");
+				}
+			});
+		}
+		
+		$("#refresh").click(function () {
+			query(1);
+		});
+
+		// 搜索
+		$("#search-btn").click(function () {
+			query(1);
+		});
+		
+		// 分页
+		$("#first-page").click(function () {
+			if (totalPage > 0) {
+				pageNum = 1;
+				query(1);
+			}
+		});
+		$("#previous-page").click(function () {
+			if (totalPage > 0) {
+				if (pageNum > 1) {
+					pageNum--;	
+				}
+				query(pageNum);
+			}
+		});
+		$("#next-page").click(function () {
+			if (totalPage > 0) {
+				if (pageNum < totalPage) {
+					pageNum++;
+				}
+				query(pageNum);
+			}
+		});
+		$("#last-page").click(function () {
+			if (totalPage > 0) {
+				pageNum = totalPage;
+				query(totalPage);
+			}
+		});
+	</script>
+</body>
+</html>

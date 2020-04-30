@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <title>${appName!} - ${appDesc!}</title>
+    <style type="text/css">
+    	#add-auth label {
+   		    line-height: 21px;
+    		margin-bottom: 0;
+    		padding-top: 0;
+    		padding-bottom: 0;
+    	}
+    	
+    	#add-auth input,
+    	#add-auth select {
+    		background-color: #fff;
+    		border: none;
+    		width: 100%;
+    	}
+    	
+    	#add-auth button {
+    		font-weight: bold;
+    		color: #000;
+    		text-align: center;
+    	}
+    </style>
+</head>
+
+<body>
+	<#include "${base!}/common/pageHeader.html" />
+	<#include "${base!}/common/alert.html" />
+	
+	<ul class="list-group">
+		<li class="list-group-item">
+			<h4 class="list-group-item-heading">提交认证信息</h4>
+		</li>
+	</ul>
+	
+	<form id="add-auth">
+		<ul class="list-group">
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="name"><span class="text-require">*</span>姓名</label>
+					<div class="col-xs-8">
+						<input type="text" placeholder="姓名" id="name" name="name" value="${name!}" />
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="identity_type"><span class="text-require">*</span>证件类型</label>
+					<div class="col-xs-8">
+						<select name="identity_type" id="identity_type">
+							<option value="">请选择</option>
+							<option value="1">居民身份证</option>
+							<option value="2">护照</option>
+						</select>
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="identity_num"><span class="text-require">*</span>证件号码</label>
+					<div class="col-xs-8">
+						<input type="text" placeholder="证件号码" id="identity_num" name="identity_num" />
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="image1"><span class="text-require">*</span>证件正面照片</label>
+					<div class="col-xs-8">
+						<input type="file" placeholder="证件正面照片" id="image1" />
+						<input type="hidden" name="image1" id="image1-hidden" />
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="image2"><span class="text-require">*</span>证件反面照片</label>
+					<div class="col-xs-8">
+						<input type="file" placeholder="证件反面照片" id="image2" />
+						<input type="hidden" name="image2" id="image2-hidden" />
+					</div>
+				</div>
+			</li>
+		</ul>
+		
+		<div class="list-group">
+			<button type="button" class="list-group-item" id="save">提&nbsp;&nbsp;交</button>
+		</div>
+	</form>
+</body>
+
+<script type="text/javascript">
+	Date.prototype.Format = function (fmt) { 
+	    var o = {
+	        "M+": this.getMonth() + 1, //月份 
+	        "d+": this.getDate(), //日 
+	        "h+": this.getHours(), //小时 
+	        "m+": this.getMinutes(), //分 
+	        "s+": this.getSeconds(), //秒 
+	        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+	        "S": this.getMilliseconds() //毫秒 
+	    };
+	    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+	    for (var k in o)
+	    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	    return fmt;
+	}
+	
+	function formatDate(d) {
+		return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+	}
+	
+	function compress(id) {
+	    var fileObj = document.getElementById(id).files[0];
+	    if (!fileObj.type.startsWith("image")) {
+	    	showWarning("只能选择图片上传！");
+			$("#" + id).val("");
+	    	return;
+	    }
+	    var reader = new FileReader();
+	    reader.readAsDataURL(fileObj);
+	    
+        reader.onload = function(e) {
+	        var image = new Image();
+	        image.src = e.target.result;
+	        image.onload = function() {
+        		var x;
+	        	if (image.width > 1000 || image.height > 1000) {
+	        		// 按宽高不超过1000px等比例压缩重绘
+	        		if (image.width > image.height) {
+						x = image.width / 1000;
+	        		} else {
+	        			x = image.height / 1000;
+	        		}
+	        	} else {
+	        		x = 1;
+	        	}
+	            var canvas = document.createElement('canvas');
+	            var context = canvas.getContext('2d');
+	            var imageWidth = image.width / x;
+	            var imageHeight = image.height / x;
+
+	            canvas.width = imageWidth;
+	            canvas.height = imageHeight;
+
+	            context.drawImage(image, 0, 0, imageWidth, imageHeight);
+	            var img = canvas.toDataURL('image/jpeg');
+				$("#" + id + "-hidden").val(img);
+	        }
+	    }
+	}
+	
+	$("#image1").change(function () {
+		compress("image1");
+	});
+	
+	$("#image2").change(function () {
+		compress("image2");
+	});
+	
+	$("#save").click(function () {
+		if ($("#name").val() == '') {
+			showWarning("姓名不能为空！");
+			return;
+		}
+		if ($("#identity_type").val() == '') {
+			showWarning("证件类型不能为空！");
+			return;
+		}
+		if ($("#identity_num").val() == '') {
+			showWarning("证件号码不能为空！");
+			return;
+		}
+		if ($("#image1-hidden").val() == '') {
+			showWarning("请上传证件正面照片！");
+			return;
+		}
+		if ($("#image2-hidden").val() == '') {
+			showWarning("请上传证件反面照片！");
+			return;
+		}
+		$.ajax({
+			url: "${base!}/client/user/saveAuth",
+			type: "post",
+			async: false,
+			data: $("#add-auth").serialize(),
+			success: function (resp) {
+				var res = eval('('+resp+')');
+				if (res.code && res.code == '1') {
+					showInfo("提交成功！");
+					setTimeout(function () {
+						window.location.href = "${base!}/index";
+					}, 1500);
+				} else {
+					showInfo(res.message);
+				}
+			},
+			error: function () {
+				showError("提交失败，请稍后再试");
+			}
+		});
+	});
+</script>
+</html>

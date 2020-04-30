@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+	<#include "/common/header.html" />
+	<title>停车场总览 - ${appName!}</title>
+	<style type="text/css">
+		.statistics {
+			padding: 9px;
+		}
+		.statistics-box {
+			margin: 0;
+		}
+		.panel-heading {
+			font-weight: bold;
+			background-color: #fff !important;
+			color: #666;
+		}
+		#total-num i {
+			color: #337ab7;
+		}
+		#free-num i {
+			color: #5cb85c;
+		}
+		#order-num i {
+			color: #e29200;
+		}
+		#trade-num i {
+			color: #800080;
+		}
+		.statistics-box .panel-body {
+			font-size: 36px;
+			font-weight: bold;
+		}
+		.statistics-box .panel-body .num-field {
+			float: right;
+			color: #666;
+		}
+		th, td {
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div class="statistics col-xs-12">
+		<div class="panel panel-default" style="margin: 0;">
+			<div class="panel-body">
+				<div class="col-xs-12 col-sm-6">
+					<label style="line-height: 34px; float:left; margin: 0;">当前停车场：</label>
+					<div class="col-xs-6">
+						<select class="form-control" id="current-lot">
+							<option>-</option>
+						</select>
+					</div>
+					<button type="button" class="btn btn-primary" id="change-lot">切换</button>
+				</div>
+				<div class="col-xs-12 col-sm-6">
+					<label style="line-height: 34px; float:left; margin: 0;">空闲车位修正：</label>
+					<div class="col-xs-6">
+						<input class="form-control" type="number" value="${free!}" />
+					</div>
+					<button type="button" class="btn btn-primary" id="change-free">修正</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="total-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>额定车位总数</div>
+			<div class="panel-body">
+				<i class="fa fa-road"></i>
+				<span class="num-field">${total!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="free-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>空闲车位总数</div>
+			<div class="panel-body">
+				<i class="fa fa-road"></i>
+				<span class="num-field">${free!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="order-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>当前预约总数</div>
+			<div class="panel-body">
+				<i class="fa fa-road"></i>
+				<span class="num-field">${order!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-6 col-md-3">
+		<div class="panel panel-default statistics-box" id="trade-num">
+			<div class="panel-heading"><i class="fa fa-circle"></i>交易车位总数</div>
+			<div class="panel-body">
+				<i class="fa fa-road"></i>
+				<span class="num-field">${trade!'-'}</span>
+			</div>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>实时预约信息管理</div>
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>车牌号</th>
+						<th>预计到达时间</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody id="order-list">
+					<tr>
+						<td colspan="3">暂无数据</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+	<div class="statistics col-xs-12 col-sm-12 col-md-6">
+		<div class="panel panel-default">
+			<div class="panel-heading"><i class="fa fa-circle-o"></i>交易车位申报管理</div>
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>车位编号</th>
+						<th>所有者</th>
+						<th>提交时间</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody id="trade-list">
+					<tr>
+						<td colspan="4">暂无数据</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+	<#include "/common/alert.html" />
+	
+	<script type="text/javascript">
+		Date.prototype.Format = function (fmt) { //author: meizz 
+		    var o = {
+		        "M+": this.getMonth() + 1, //月份 
+		        "d+": this.getDate(), //日 
+		        "h+": this.getHours(), //小时 
+		        "m+": this.getMinutes(), //分 
+		        "s+": this.getSeconds(), //秒 
+		        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+		        "S": this.getMilliseconds() //毫秒 
+		    };
+		    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+		    for (var k in o)
+		    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		    return fmt;
+		}
+		
+		function formatDate(d) {
+			return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+		}
+		
+		function queryLotOrder() {
+			$.ajax({
+				url: "${base!}/manage/view/getDailyLoginCount",
+				type: "post",
+				async: false,
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						for (var i = 0; i < res.data.length; i++) {
+							loginChartName[i] = res.data[i].DATE;
+							loginChartData[i] = res.data[i].COUNT;
+						}
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("用户登录情况查询失败，请稍后再试");
+				}
+			});
+		}
+		
+		function queryLotTrade() {
+			
+		}
+	</script>
+</body>
+</html>

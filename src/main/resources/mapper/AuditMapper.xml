@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.AuditDao">
+
+    <select id="getUserAuditResult" parameterType="Map" resultType="Map">
+		SELECT
+			t.SUBMIT_TIME,
+			t.STATUS,
+			g.AUDITOR AUDITOR_ID,
+			u.NAME AUDITOR,
+			g.AUDIT_TIME,
+			g.AUDIT_RESULT,
+			g.NOTE
+		FROM
+			ep_audit_task t
+			LEFT JOIN ep_audit_log g ON t.id = g.TASK_ID 
+			LEFT JOIN ep_user u on g.AUDITOR = u.id
+		WHERE 1=1
+		<if test="type != '' and type != null">
+			AND t.TYPE = #{type}
+		</if>
+		<if test="data_id != '' and data_id != null">
+			AND t.DATA_ID = #{data_id}
+		</if>
+		ORDER BY
+			t.SUBMIT_TIME DESC
+    </select>
+    
+    <insert id="saveAuditTask" parameterType="Map">
+    	INSERT INTO ep_audit_task
+    		(ID, TYPE, DATA_ID, SUBMITTER, SUBMIT_TIME)
+    	VALUES
+    		(#{id}, #{type}, #{data_id}, #{submitter}, #{submit_time})
+    </insert>
+    
+    <select id="getUserTaskByPage" parameterType="Map" resultType="Map">
+		SELECT
+			t.ID,
+			u.ACCOUNT,
+			u.NAME,
+			u.IDENTITY_NUM,
+			t.SUBMIT_TIME,
+			t.STATUS,
+			u2.NAME AUDITOR,
+			l.AUDIT_RESULT 
+		FROM
+			EP_AUDIT_TASK t
+			LEFT JOIN ep_user u ON u.id = t.data_id
+			LEFT JOIN ep_audit_log l ON l.TASK_ID = t.ID
+			LEFT JOIN ep_user u2 ON u2.id = l.AUDITOR 
+		WHERE
+			t.TYPE = '1'
+		<if test="status != '' and status != null">
+			AND t.STATUS = #{status}
+		</if>
+		<if test="startTime != '' and startTime != null">
+			AND t.SUBMIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND t.SUBMIT_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY t.SUBMIT_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getCarTaskByPage" parameterType="Map" resultType="Map">
+    	SELECT
+			t.ID,
+			u.NAME,
+			c.PLATE_NUM,
+			c.BRAND,
+			t.SUBMIT_TIME,
+			t.STATUS,
+			u2.NAME AUDITOR,
+			l.AUDIT_RESULT 
+		FROM
+			EP_AUDIT_TASK t
+			LEFT JOIN ep_user u ON u.id = t.SUBMITTER
+			LEFT JOIN ep_audit_log l ON l.TASK_ID = t.ID
+			LEFT JOIN ep_user u2 ON u2.id = l.AUDITOR
+			LEFT JOIN ep_car c on c.id = t.data_id 
+    	WHERE
+			t.TYPE = '2'
+		<if test="status != '' and status != null">
+			AND t.STATUS = #{status}
+		</if>
+		<if test="startTime != '' and startTime != null">
+			AND t.SUBMIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND t.SUBMIT_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY t.SUBMIT_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getPlaceTaskByPage" parameterType="Map" resultType="Map">
+    	SELECT
+    		*
+    	FROM
+			EP_AUDIT_TASK t
+    	WHERE
+			t.TYPE = '3'
+		<if test="status != '' and status != null">
+			AND t.STATUS = #{status}
+		</if>
+		<if test="startTime != '' and startTime != null">
+			AND t.SUBMIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND t.SUBMIT_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY t.SUBMIT_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getTaskCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(*)
+		FROM
+			EP_AUDIT_TASK
+		WHERE
+			TYPE = #{type}
+		<if test="status != '' and status != null">
+			AND STATUS = #{status}
+		</if>
+		<if test="startTime != '' and startTime != null">
+			AND SUBMIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND SUBMIT_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY SUBMIT_TIME
+		limit #{start}, #{size}
+    </select>
+    
+</mapper>

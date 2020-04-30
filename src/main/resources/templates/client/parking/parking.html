@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <title>${appName!} - ${appDesc!}</title>
+    <style type="text/css">
+        #search-lot label {
+   		    line-height: 21px;
+    		margin-bottom: 0;
+    		padding-top: 0;
+    		padding-bottom: 0;
+    	}
+    	
+    	#search-lot input,
+    	#search-lot select {
+    		background-color: #fff;
+    		border: none;
+    		width: 100%;
+    	}
+    	
+    	#search-lot button {
+    		font-weight: bold;
+    		color: #000;
+    		text-align: center;
+    	}
+    </style>
+</head>
+
+<body>
+	<#include "${base!}/common/pageHeader.html" />
+	<#include "${base!}/common/alert.html" />
+	
+	<ul class="list-group">
+		<li class="list-group-item">
+			<h4 class="list-group-item-heading">预约停车</h4>
+			<#if auth??>
+				<#if auth != '2'>
+					<p class="list-group-item-text" id="status-para">
+						您的账户还未通过实名认证，请先认证
+					</p>
+				</#if>
+			</#if>
+			<#if hasCar??>
+				<#if hasCar != '1'>
+					<p class="list-group-item-text" id="status-para">
+						您还没有添加车辆，请先添加车辆
+					</p>
+				</#if>
+			</#if>
+		</li>
+	</ul>
+	
+	<#if auth?? && hasCar??>
+		<#if auth != '2' || hasCar != '1'>
+			<div class="list-group">
+				<#if auth != '2'>
+					<a class="list-group-item" href="${base!}/client/user/auth">查看认证情况</a>
+				</#if>
+				<#if hasCar != '1'>
+					<a class="list-group-item" href="${base!}/client/car/index">查看我的车辆</a>
+				</#if>
+			</div>
+		<#else>
+			<form id="search-lot">
+				<ul class="list-group">
+					<li class="list-group-item">
+						<div class="row">
+							<label class="col-xs-4" for="cars"><span class="text-require">*</span>选择车辆</label>
+							<div class="col-xs-8">
+								<select name="cars" id="cars">
+									<option value="">请选择</option>
+								</select>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<div class="row">
+							<label class="col-xs-4" for="arriveTime"><span class="text-require">*</span>预计到达时间</label>
+							<div class="col-xs-8">
+								<input type="time" id="arriveTime" name="arriveTime" placeholder="预计到达时间" />
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<div class="row">
+							<label class="col-xs-4" for="province"><span class="text-require">*</span>选择区域</label>
+							<div class="col-xs-8">
+								<select id="province" name="province">
+									<option value="">省/自治区/直辖市</option>
+								</select>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<div class="row">
+							<label class="col-xs-4" for="city">&nbsp;</label>
+							<div class="col-xs-8">
+								<select id="city" name="city">
+									<option value="">市/自治州</option>
+								</select>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<div class="row">
+							<label class="col-xs-4" for="region">&nbsp;</label>
+							<div class="col-xs-8">
+								<select id="region" name="region">
+									<option value="">区/县/自治县</option>
+								</select>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<button type="button" id="search" class="btn btn-primary" style="width: 100%; height: 100%; color: #fff;">查&nbsp;&nbsp;询</button>
+					</li>
+				</ul>
+			</form>
+		
+			<div class="list-group" id="parking-lot-list"></div>
+		</#if>
+	</#if>
+</body>
+
+<script type="text/javascript">
+	Date.prototype.Format = function (fmt) { //author: meizz 
+	    var o = {
+	        "M+": this.getMonth() + 1, //月份 
+	        "d+": this.getDate(), //日 
+	        "h+": this.getHours(), //小时 
+	        "m+": this.getMinutes(), //分 
+	        "s+": this.getSeconds(), //秒 
+	        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+	        "S": this.getMilliseconds() //毫秒 
+	    };
+	    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+	    for (var k in o)
+	    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	    return fmt;
+	}
+	
+	function formatDate(d) {
+		return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+	}
+	
+	var cars = '${cars!}';
+	if (cars != '') {
+		var list = eval(cars);
+		var str = '<option value="">请选择</option>';
+		for (var i = 0; i < list.length; i++) {
+			str += '<option value="' + list[i].ID + '">' + list[i].PLATE_NUM + '（' + list[i].BRAND + '）</option>';
+		}
+		$("#cars").html(str);
+	}
+	
+	// 初始化行政区划
+	function loadRegion(parentId, selectorId) {
+		$.ajax({
+			url: '${base!}/manage/region/select',
+			type: 'post',
+			data: {
+				"parentId": parentId
+			},
+			async: false,
+			success: function (resp) {
+				var res = eval('('+resp+')');
+				var str;
+				if (selectorId == "province" || selectorId == "eprovince") {
+					str = "<option value=''>省/自治区/直辖市</option>";
+				} else if (selectorId == "city" || selectorId == "ecity") {
+					str = "<option value=''>市/自治州</option>";
+				} else if (selectorId == "region" || selectorId == "eregion") {
+					str = "<option value=''>区/县/自治县</option>";
+				}
+				for (var i = 0; i < res.data.length; i++) {
+					str += "<option value='" + res.data[i].ID + "'>" + res.data[i].NAME + "</option>";
+				}
+				$("#" + selectorId).html(str);
+			},
+			error: function () {
+				showError("行政区划加载失败，请稍后再试");
+			}
+		});
+	}
+	$("#province").change(function () {
+		$("#region").html("<option value=''>区/县/自治县</option>");
+		if ($("#province") != null && $("#province").val() != '') {
+			loadRegion($("#province").val(), "city");
+		}
+	});
+	$("#city").change(function () {
+		if ($("#city") != null && $("#city").val() != '') {
+			loadRegion($("#city").val(), "region");
+		}
+	});
+	
+	loadRegion("000000", "province");
+	
+	function parking(lotId, lotName) {
+		var carId = $("#cars").val()
+		var arriveTime = $("#arriveTime").val();
+		if (carId == '') {
+			showWarning("请选择车辆");
+			return;
+		}
+		if (arriveTime == '') {
+			showWarning("请选择预计到达时间");
+			return;
+		}
+		var d = new Date();
+		var curr = (d.getHours() < 10 ? "0" + d.getHours() : d.getHours()) + ":" + (d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes());
+		if (arriveTime < curr) {
+			showWarning("预计到达时间不能早于当前时间");
+			return;
+		}
+		showConfirm("您选择的是<b>" + lotName + "</b>（预计<b>" + arriveTime + "</b>到达），确认预约？", function () {
+			$.ajax({
+				url: "${base!}/client/parking/add",
+				type: "post",
+				async: false,
+				data: {
+					"carId": carId,
+					"lotId": lotId,
+					"arriveTime": arriveTime
+				},
+				success: function (resp) {
+					var res = eval('('+resp+')');
+					if (res.code && res.code == '1') {
+						showInfo("预约成功！请在约定时间到达");
+						setTimeout(function () {
+							window.location.href = "${base!}/client/parking/index";
+						}, 1500);
+					} else {
+						showInfo(res.message);
+					}
+				},
+				error: function () {
+					showError("预约失败，请稍后再试");
+				}
+			});
+		});
+	}
+	
+	$("#search").click(function () {
+		if ($("#region").val() == '') {
+			showWarning("请选择具体区域");
+			return;
+		}
+		$.ajax({
+			url: '${base!}/manage/parkingLot/select',
+			type: "post",
+			async: false,
+			data: {
+				"region": $("#region").val()
+			},
+			success: function (resp) {
+				var res = eval('('+resp+')');
+				var str = '';
+				if (res.code == '1') {
+					for (var i = 0; i < res.data.length; i++) {
+						if (parseInt(res.data[i].LIVE_NUM) > 0) {
+							str += '<button class="list-group-item" onclick="parking(\'' + res.data[i].ID + '\', \'' + res.data[i].NAME + '\')">';	
+						} else {
+							str += '<button class="list-group-item" disabled="disabled">';
+						}
+						str += '<div style="font-size: 1.2em; font-weight: bold; margin-bottom: 3px;">' + res.data[i].NAME + '</div>';
+						str += '<div>剩余车位：' + res.data[i].LIVE_NUM + '</div>';
+						str += '</button>';
+					}
+					$("#parking-lot-list").html(str);
+				} else {
+    				showWarning(data.message);
+    			}
+			},
+			error: function () {
+				showError("查询失败，请稍后再试");
+			}
+		});
+		
+	});
+</script>
+</html>

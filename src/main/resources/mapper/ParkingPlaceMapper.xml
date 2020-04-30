@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.ParkingPlaceDao">
+
+    <select id="getParkingPlaceInfo" parameterType="Map" resultType="Map">
+    	SELECT 
+			p.ID,
+			r2.PARENT_ID PROVINCE,
+			r.PARENT_ID CITY,
+			lot.REGION,
+			p.LOT_ID,
+			lot.NAME LOT_NAME,
+			p.PLACE_CODE,
+			p.OWNER_TYPE,
+			p.OWNER OWNER_ID,
+			u.NAME OWNER,
+			o.NAME OWNER_ORG,
+			p.TRADE,
+			p.TRADE_TYPE,
+			p.TRADE_TITLE,
+			p.VERIFIED,
+			p.DISABLED,
+			p.CREATOR,
+			p.CREATE_TIME,
+			p.UPDATOR,
+			p.UPDATE_TIME
+		FROM
+			EP_PARKING_PLACE p
+			LEFT JOIN ep_parking_lot lot on p.lot_id = lot.id
+			LEFT JOIN ep_org o on o.ID = p.OWNER and p.OWNER_TYPE = '1'
+			LEFT JOIN ep_user u on u.ID = p.OWNER and p.OWNER_TYPE = '2'
+			LEFT JOIN ep_region r on r.ID = lot.region
+			LEFT JOIN ep_region r2 on r2.ID = r.PARENT_ID
+		WHERE 
+			p.STATUS = 1
+		<if test="id != '' and id != null">
+			AND p.ID = #{id}
+		</if>
+		<if test="lot_id != '' and lot_id != null">
+			AND p.LOT_ID = #{lot_id}
+		</if>
+		<if test="owner != '' and owner != null">
+			AND p.OWNER = #{owner}
+		</if>
+		ORDER BY p.CREATE_TIME
+	</select>
+	
+	<select id="getParkingPlaceImage" parameterType="Map" resultType="Map">
+		SELECT
+			IMAGE
+		FROM
+			EP_PARKING_PLACE
+		WHERE
+			ID = #{id}
+	</select>
+    
+    <select id="getParkingPlaceByPage" parameterType="Map" resultType="Map">
+    	SELECT 
+			p.ID,
+			p.LOT_ID,
+			lot.NAME LOT_NAME,
+			p.PLACE_CODE,
+			p.OWNER_TYPE,
+			u.NAME OWNER,
+			o.NAME OWNER_ORG,
+			p.TRADE,
+			p.TRADE_TYPE,
+			p.TRADE_TITLE,
+			p.VERIFIED,
+			p.STATUS,
+			p.DISABLED,
+			p.CREATOR,
+			p.CREATE_TIME,
+			p.UPDATOR,
+			p.UPDATE_TIME
+		FROM
+			EP_PARKING_PLACE p
+			LEFT JOIN ep_parking_lot lot on p.lot_id = lot.id
+			LEFT JOIN ep_org o on o.ID = p.OWNER and p.OWNER_TYPE = '1'
+			LEFT JOIN ep_user u on u.ID = p.OWNER and p.OWNER_TYPE = '2'
+		WHERE 
+			p.STATUS = 1
+		<if test="lot_id != '' and lot_id != null">
+			AND p.LOT_ID = #{lot_id}
+		</if>
+		<if test="owner != '' and owner != null">
+			AND u.NAME = #{owner} or o.NAME = #{owner}
+		</if>
+		<if test="verified != '' and verified != null">
+			AND p.VERIFIED = #{verified}
+		</if>
+		ORDER BY p.CREATE_TIME
+		<if test="start != '' and start != null and size != '' and size != null">
+			limit #{start}, #{size}
+		</if>
+    </select>
+    
+    <select id="getParkingPlaceCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM 
+			EP_PARKING_PLACE p
+			LEFT JOIN ep_org o on o.ID = p.OWNER and p.OWNER_TYPE = '1'
+			LEFT JOIN ep_user u on u.ID = p.OWNER and p.OWNER_TYPE = '2'
+		WHERE 
+			p.STATUS = 1
+		<if test="lot_id != '' and lot_id != null">
+			AND p.LOT_ID = #{lot_id}
+		</if>
+		<if test="owner != '' and owner != null">
+			AND u.NAME = #{owner} or o.NAME = #{owner}
+		</if>
+    </select>
+    
+    <insert id="insertParkingPlace" parameterType="Map">
+    	INSERT INTO EP_PARKING_PLACE
+    		(ID, LOT_ID, PLACE_CODE, OWNER_TYPE, OWNER, TRADE_TYPE, TRADE_TITLE, IMAGE, CREATOR)
+    	VALUES
+			(#{id}, #{lot_id}, #{place_code}, #{owner_type}, #{owner}, 
+				#{trade_type}, #{trade_title}, #{image}, #{creator})
+    </insert>
+    
+    <update id="updateParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			PLACE_CODE = #{place_code},
+			OWNER_TYPE = #{owner_type},
+			OWNER = #{owner},
+			TRADE = '0',
+			TRADE_TYPE = #{trade_type},
+			TRADE_TITLE = #{trade_title},
+			IMAGE = #{image},
+			VERIFIED = '0',
+			UPDATOR = #{updator}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="deleteParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="enableParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			DISABLED = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="disableParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			DISABLED = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="putOnParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			TRADE = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="putOffParkingPlace" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			TRADE = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="completeTrade" parameterType="Map">
+    	UPDATE
+			EP_PARKING_PLACE
+    	SET
+			TRADE = '2'
+		WHERE
+			ID = #{id}
+    </update>
+    
+</mapper>

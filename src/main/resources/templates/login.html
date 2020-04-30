@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <link rel="stylesheet" type="text/css" href="${base!}/css/login.css">
+	<script type="text/javascript" src="${base!}/js/lib/vector.js"></script>
+    <title>用户登录 - ${appName!}</title>
+</head>
+<body>
+	<header>
+		<img alt="Logo" src="${base!}/img/logo/logo.png" id="logo" />
+		<span id="logo-title">易停</span>
+		<span id="logo-subtitle">用户登录</span>
+	</header>
+	
+	<div id="container">
+		<div id="output">
+			<div class="containerT">
+				<form class="form">
+					<input type="text" placeholder="邮箱/用户名" id="u" name="u" autocomplete="on" maxlength="50" />
+					<input type="password" placeholder="密码" id="p" name="p" autocomplete="on" maxlength="50" />
+					<div class="form-group" style="position: relative;">
+						<input type="text" placeholder="验证码" id="captcha" name="captcha" maxlength="4" />
+						<img id="captcha-img" alt="验证码图片" src="${base!}/captcha?d=new Date().getTime()"
+		                	width="100" height="39" onclick="javascript:document.getElementById('captcha-img').src='${base!}/captcha?d='+new Date().getTime()" />
+					</div>
+					<button type="button" class="btn btn-default" id="login-btn">登&nbsp;录</button>
+					<a href="${base!}/reg" id="reg-btn" class="btn btn-success">注&nbsp;册</a>
+				</form>
+			</div>
+		</div>
+	</div>
+	
+	<footer>
+   		<br>
+    	<p class="hidden-xs hidden-sm">
+    		<span>使用最新版浏览器和1366*768及以上分辨率，浏览体验更佳</span>
+   		</p>
+		<p>&copy; <b id="copyright"></b> Easy Parking. All Rights Reserved.</p> 
+	</footer>
+	
+	<#include "/common/alert.html" />
+
+	<script type="text/javascript">
+	    $(function () {
+	        Victor("container", "output");
+	        $("#u").focus();
+	        $(document).keydown(function (event) {
+	            if(event.keyCode == 13){
+	                $("#login-btn").click();
+	            }
+	        });
+	    	var bgHeight = $(window).height() > 660 ? ($(window).height() - 160) : 500;
+	        $("#container").height(bgHeight);
+	        $("#output").height(bgHeight);
+	        $("canvas").height(bgHeight);
+	        $("#container").width(window.innerWidth);
+	        $("#output").width(window.innerWidth);
+	        $("canvas").width(window.innerWidth);
+
+	        var year = new Date().getFullYear();
+	        if (year > 2019) {
+	        	$("#copyright").html("2019-"+year);
+	        } else {
+	        	$("#copyright").html(year);
+	        }
+		    
+		    $(window).resize(function () {
+		    	var bgHeight = window.innerHeight > 660 ? (window.innerHeight - 160) : 500;
+		        $("#container").height(bgHeight);
+		        $("#output").height(bgHeight);
+		        $("canvas").height(bgHeight);
+		        $("#container").width(window.innerWidth);
+		        $("#output").width(window.innerWidth);
+		        $("canvas").width(window.innerWidth);
+		    });
+
+		    $("#captcha").focus(function () {
+		    	$("#captcha-img").animate({ opacity: 1 }, 300, function () {
+		    		$("#captcha-img").css("cursor", "pointer");
+		    	})
+		    });
+		    
+		    $("#captcha").blur(function () {
+		    	$("#captcha-img").animate({ opacity: 0 }, 300, function () {
+		    		$("#captcha-img").css("cursor", "auto");
+		    	})
+		    });
+		    
+		    $("#login-btn").click(function () {
+		    	if ($("#u").val() == '') {
+		    		showWarning("用户名不能为空，请检查");
+		    		$("#u").focus();
+		    		return;
+		    	}
+		    	if ($("#p").val() == '') {
+		    		showWarning("密码不能为空，请检查");
+		    		$("#p").focus();
+		    		return;
+		    	}
+		    	if ($("#captcha").val() == '') {
+		    		showWarning("验证码不能为空，请检查");
+		    		$("#captcha").focus();
+		    		return;
+		    	}
+		    	$("#login-btn").attr("disabled", "disabled");
+		    	$("#login-btn").text("登录中...");
+		    	$.ajax({
+		    		url: '${base!}/loginHandler',
+		    		type: 'post',
+		    		data: {
+		    			u: $("#u").val(),
+		    			p: $.md5($("#p").val()),
+		    			captcha: $("#captcha").val()
+		    		},
+		    		success: function (resp) {
+		    			var data = eval('('+resp+')');
+		    			if (data.code == '1') {
+		    				window.location.href = "${base!}/index";
+		    			} else {
+		    				showWarning(data.message);
+		    				$("#captcha-img").click();
+					    	$("#login-btn").removeAttr("disabled");
+					    	$("#login-btn").text("登录");
+		    			}
+		    		},
+		    		error: function (resp) {
+				    	showError("登录失败，请稍后再试");
+		    			$("#captcha-img").click();
+				    	$("#login-btn").removeAttr("disabled");
+				    	$("#login-btn").text("登录");
+		    		}
+		    	});
+		    });
+	    });
+	</script>
+</body>
+</html>

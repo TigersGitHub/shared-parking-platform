@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.UserDao">
+
+    <select id="getUserInfoByLogin" parameterType="Map" resultType="Map">
+		SELECT 
+			ID,
+			ACCOUNT,
+			NAME,
+			IDENTITY_TYPE,
+			IDENTITY_NUM,
+			MOBILE,
+			EMAIL,
+			REGION,
+			ADDRESS,
+			ORG_ID,
+			AUTHENTICATION,
+			TYPE,
+			DISABLED,
+			CREATOR,
+			CREATE_TIME,
+			UPDATOR,
+			UPDATE_TIME
+		FROM
+			EP_USER
+		WHERE
+			STATUS = '1' 
+			AND (ACCOUNT = #{userName} OR EMAIL = #{userName})
+			AND PASSWORD = #{password}
+    </select>
+
+    <select id="getUserInfo" parameterType="Map" resultType="Map">
+    	SELECT 
+			u.ID,
+			u.ACCOUNT,
+			u.NAME,
+			u.IDENTITY_TYPE,
+			u.IDENTITY_NUM,
+			u.MOBILE,
+			u.EMAIL,
+			r2.PARENT_ID PROVINCE,
+			r.PARENT_ID CITY,
+			u.REGION,
+			u.ADDRESS,
+			u.ORG_ID,
+			u.AUTHENTICATION,
+			u.TYPE,
+			u.DISABLED,
+			u.STATUS,
+			u.CREATOR,
+			u.CREATE_TIME,
+			u.UPDATOR,
+			u.UPDATE_TIME
+		FROM
+			EP_USER u
+		LEFT JOIN ep_region r on r.id = u.region
+		LEFT JOIN ep_region r2 on r2.id = r.PARENT_ID
+		WHERE 
+			u.STATUS = '1' 
+		<if test="id != '' and id != null">
+			AND (u.ID = #{id} OR u.ACCOUNT = #{id})
+		</if>
+		<if test="email != '' and email != null">
+			AND u.EMAIL = #{email}
+		</if>
+	</select>
+    
+    <select id="getUserInfoByPage" parameterType="Map" resultType="Map">
+    	SELECT 
+			ID,
+			ACCOUNT,
+			NAME,
+			IDENTITY_TYPE,
+			IDENTITY_NUM,
+			MOBILE,
+			EMAIL,
+			REGION,
+			ADDRESS,
+			ORG_ID,
+			AUTHENTICATION,
+			TYPE,
+			DISABLED,
+			STATUS,
+			CREATOR,
+			CREATE_TIME,
+			UPDATOR,
+			UPDATE_TIME
+		FROM
+			EP_USER
+		WHERE 
+			STATUS = '1' 
+		<if test="account != '' and account != null">
+			AND ACCOUNT = #{account}
+		</if>
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="email != '' and email != null">
+			AND EMAIL = #{email}
+		</if>
+		<if test="mobile != '' and mobile != null">
+			AND MOBILE = #{mobile}
+		</if>
+		<if test="type != '' and type != null">
+			AND TYPE = #{type}
+		</if>
+		ORDER BY CREATE_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getUserInfoCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_USER
+		WHERE 
+			STATUS = '1' 
+		<if test="account != '' and account != null">
+			AND ACCOUNT = #{account}
+		</if>
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="email != '' and email != null">
+			AND EMAIL = #{email}
+		</if>
+		<if test="mobile != '' and mobile != null">
+			AND MOBILE = #{mobile}
+		</if>
+		<if test="type != '' and type != null">
+			AND TYPE = #{type}
+		</if>
+    </select>
+    
+    <insert id="insertUser" parameterType="Map">
+    	INSERT INTO EP_USER
+    		(ID, ACCOUNT, NAME, PASSWORD, MOBILE, EMAIL, REGION, ADDRESS, TYPE, ORG_ID, CREATOR)
+    	VALUES
+			(#{id}, #{account}, #{name}, #{password}, #{mobile}, #{email}, #{region}, #{address}, #{type}, #{org_id}, #{creator})
+    </insert>
+    
+    <update id="updateUser" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			NAME = #{name},
+			MOBILE = #{mobile},
+			EMAIL = #{email},
+			REGION = #{region},
+			ADDRESS = #{address},
+			ORG_ID = #{orgId},
+			UPDATOR = #{updator}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="updateUserAuth" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			NAME = #{name},
+			IDENTITY_TYPE = #{identity_type},
+			IDENTITY_NUM = #{identity_num},
+			IMAGE1 = #{image1},
+			IMAGE2 = #{image2},
+			UPDATOR = #{updator},
+			AUTHENTICATION = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="updateUserForClient" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			MOBILE = #{mobile},
+			REGION = #{region},
+			ADDRESS = #{address},
+			UPDATOR = #{updator}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="deleteUser" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="enableUser" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			DISABLED = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="disableUser" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			DISABLED = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="updateUserPassword" parameterType="Map">
+    	UPDATE
+			EP_USER
+    	SET
+			PASSWORD = #{newpw},
+			UPDATOR = #{id}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <select id="checkUserPassword" parameterType="Map" resultType="Map">
+    	SELECT
+    		1
+    	FROM
+			EP_USER
+    	WHERE
+			ID = #{id}
+			AND PASSWORD = #{oldpw}
+    </select>
+    
+</mapper>

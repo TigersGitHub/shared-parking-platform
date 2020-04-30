@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.LogDao">
+
+    <select id="getAuditLogByPage" parameterType="Map" resultType="Map">
+    	SELECT
+			a.ID,
+			a.TASK_ID,
+			a.TASK_TYPE,
+			a.AUDIT_TYPE,
+			u.NAME AUDITOR,
+			a.AUDIT_TIME,
+			a.AUDIT_RESULT,
+			a.NOTE
+		FROM
+			EP_AUDIT_LOG a
+			LEFT JOIN ep_user u ON a.AUDITOR = u.ID
+		WHERE 1=1
+		<if test="startTime != '' and startTime != null">
+			AND a.AUDIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND a.AUDIT_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY a.AUDIT_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getAuditLogCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_AUDIT_LOG
+		WHERE 1=1
+		<if test="startTime != '' and startTime != null">
+			AND AUDIT_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND AUDIT_TIME &lt;= #{endTime}
+		</if>
+    </select>
+    
+    <insert id="insertAuditLog" parameterType="Map">
+    	INSERT INTO EP_AUDIT_LOG
+    		(ID, TASK_ID, TASK_TYPE, AUDIT_TYPE, AUDITOR, AUDIT_RESULT, NOTE)
+    	VALUES
+			(#{id}, #{task_id}, #{task_type}, #{audit_type}, #{auditor}, #{audit_result}, #{note})
+    </insert>
+
+    <select id="getLoginLogByPage" parameterType="Map" resultType="Map">
+    	SELECT 
+			ID,
+			LOGIN_NAME,
+			IP,
+			PORT,
+			DEVICE,
+			OS,
+			UA,
+			LOGIN_TIME,
+			STATUS,
+			NOTE
+		FROM
+			EP_LOGIN_LOG
+		WHERE 1=1
+		<if test="startTime != '' and startTime != null">
+			AND LOGIN_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND LOGIN_TIME &lt;= #{endTime}
+		</if>
+		ORDER BY LOGIN_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getLoginLogCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_LOGIN_LOG
+		WHERE 1=1
+		<if test="startTime != '' and startTime != null">
+			AND LOGIN_TIME >= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			AND LOGIN_TIME &lt;= #{endTime}
+		</if>
+    </select>
+    
+    <insert id="insertLoginLog" parameterType="Map">
+    	INSERT INTO EP_LOGIN_LOG
+    		(ID, LOGIN_NAME, IP, PORT, DEVICE, OS, UA, STATUS, NOTE)
+    	VALUES
+			(#{id}, #{login_name}, #{ip}, #{port}, #{device}, 
+				#{os}, #{ua}, #{status}, #{note})
+    </insert>
+    
+</mapper>

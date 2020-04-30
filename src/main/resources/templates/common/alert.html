@@ -1,0 +1,118 @@
+<style type="text/css">
+	.msg-alert {
+		display: none;
+		position: fixed;
+		top: 30%;
+		width: 280px;
+		z-index: 1999;
+		box-shadow: 0px 0px 10px #888888;
+	}
+	
+	#accept-alert .btns,
+	#confirm-alert .btns {
+		text-align: right;
+		padding-top: 8px;
+	}
+</style>
+
+<div id="info-alert" class="panel panel-info msg-alert">
+	<div class="panel-heading">
+		<h3 class="panel-title">系统提示</h3>
+	</div>
+	<div class="panel-body"></div>
+</div>
+
+<div id="warning-alert" class="panel panel-warning msg-alert">
+	<div class="panel-heading">
+		<h3 class="panel-title">系统提示</h3>
+	</div>
+	<div class="panel-body"></div>
+</div>
+
+<div id="error-alert" class="panel panel-danger msg-alert">
+	<div class="panel-heading">
+		<h3 class="panel-title">系统提示</h3>
+	</div>
+	<div class="panel-body"></div>
+</div>
+
+<div id="accept-alert" class="panel panel-info msg-alert">
+	<div class="panel-heading">
+		<h3 class="panel-title">系统提示</h3>
+	</div>
+	<div class="panel-body">
+		<p></p>
+		<div class="btns">
+	        <button type="button" class="btn btn-primary" id="accept">确认</button>
+		</div>
+	</div>
+</div>
+
+<div id="confirm-alert" class="panel panel-warning msg-alert">
+	<div class="panel-heading">
+		<h3 class="panel-title">操作确认</h3>
+	</div>
+	<div class="panel-body">
+		<p></p>
+		<div class="btns">
+			<button type="button" class="btn btn-default" id="cancel">取消</button>
+	        <button type="button" class="btn btn-primary" id="accept">确认</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	function resizeAlert() {
+		$(".msg-alert").css("left", (window.innerWidth - 280) / 2);
+	}
+	resizeAlert();
+	$(window).resize(function () {
+		resizeAlert();
+	});
+
+	function showConfirm(msg, fun) {
+		$("#confirm-alert .panel-body p").html(msg);
+		$("#confirm-alert").fadeIn();
+		$("#confirm-alert #accept").click(function () {
+			fun();
+			$("#confirm-alert").fadeOut();
+		});
+	}
+
+	function showAccept(msg, fun) {
+		$("#accept-alert .panel-body p").html(msg);
+		$("#accept-alert").fadeIn();
+		$("#accept-alert #accept").click(function () {
+			fun();
+			$("#accept-alert").fadeOut();
+		});
+	}
+	
+	$("#confirm-alert #cancel").click(function () {
+		$("#confirm-alert").fadeOut();
+	});
+
+	function showInfo(msg) {
+		$("#info-alert .panel-body").html(msg);
+		$("#info-alert").fadeIn();
+		setTimeout(function () {
+	    	$("#info-alert").fadeOut();
+	    }, 1500);
+	}
+	
+	function showWarning(msg) {
+		$("#warning-alert .panel-body").html(msg);
+		$("#warning-alert").fadeIn();
+		setTimeout(function () {
+	    	$("#warning-alert").fadeOut();
+	    }, 1500);
+	}
+	
+	function showError(msg) {
+		$("#error-alert .panel-body").html(msg);
+		$("#error-alert").fadeIn();
+		setTimeout(function () {
+	    	$("#error-alert").fadeOut();
+	    }, 1500);
+	}
+</script>

@@ -1,0 +1,48 @@
+<style type="text/css">
+	.page-footer {
+		font-size: 14px;
+		padding: 24px 10%;
+		color: #999;
+		text-align: center;
+		background-color: rgb(244,244,244);
+	}
+	.page-footer-blank {
+		background-color: rgb(244,244,244);
+	}
+</style>
+
+<div id="page-footer" class="page-footer">
+    <div id="link-list"></div>
+    <div class="page-footer-inner">
+    	<p>
+    		<span>${appName!} ${version!}</span>
+    		<span>&nbsp;|&nbsp;</span>
+    		<#if icp ?? && icp != "">
+    			<#if icpUrl ?? && icpUrl != "">
+	    			<a class="icp text-gray" href="${icpUrl!}" target="_blank">${icp!}</a>
+    			<#else>
+    				<span class="icp">${icp!}</span>
+    			</#if>
+    		</#if>
+   		</p>
+		<p>&copy; <b id="copyright"></b> Easy Parking. All Rights Reserved.</p> 
+	</div>
+</div>
+<div class="page-footer-blank"></div>
+
+<script>
+	$(function () {
+        var year = new Date().getFullYear();
+        if (year > 2019) {
+        	$("#copyright").html("2019-"+year);
+        } else {
+        	$("#copyright").html(year);
+        }
+        
+        $(".page-footer-blank").css("height", $(window).height() - $(".page-footer").position().top - $(".page-footer").outerHeight());
+        
+        $(window).resize(function () {
+    	    $(".page-footer-blank").css("height", $(window).height() - $(".page-footer").position().top - $(".page-footer").outerHeight());	
+        })
+    });
+</script>

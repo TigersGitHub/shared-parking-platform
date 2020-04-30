@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+    <#include "/common/header.html" />
+    <title>${appName!} - ${appDesc!}</title>
+    <style type="text/css">
+    	#resetpw-form label {
+   		    line-height: 21px;
+    		margin-bottom: 0;
+    		padding-top: 0;
+    		padding-bottom: 0;
+    	}
+    	
+    	#resetpw-form input,
+    	#resetpw-form select {
+    		background-color: #fff;
+    		border: none;
+    		width: 100%;
+    	}
+    	
+    	#resetpw-form button {
+    		font-weight: bold;
+    		color: #000;
+    		text-align: center;
+    	}
+    </style>
+</head>
+
+<body>
+	<#include "${base!}/common/pageHeader.html" />
+	<#include "${base!}/common/alert.html" />
+	
+	<ul class="list-group">
+		<li class="list-group-item">
+			<h4 class="list-group-item-heading">重置密码</h4>
+		</li>
+	</ul>
+	
+	<form id="resetpw-form">
+		<ul class="list-group">
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="oldpw"><span class="text-require">*</span>旧密码</label>
+					<div class="col-xs-8">
+						<input type="password" placeholder="旧密码" id="oldpw" name="oldpw" />
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="newpw"><span class="text-require">*</span>新密码</label>
+					<div class="col-xs-8">
+						<input type="password" placeholder="新密码" id="newpw" name="newpw" />
+					</div>
+				</div>
+			</li>
+			<li class="list-group-item">
+				<div class="row">
+					<label class="col-xs-4" for="newpw2"><span class="text-require">*</span>再次输入新密码</label>
+					<div class="col-xs-8">
+						<input type="password" placeholder="再次输入新密码" id="newpw2" name="newpw2" />
+					</div>
+				</div>
+			</li>
+		</ul>
+		
+		<div class="list-group">
+			<button type="button" class="list-group-item" id="save">提&nbsp;&nbsp;交</button>
+		</div>
+	</form>
+</body>
+
+<script type="text/javascript">
+	Date.prototype.Format = function (fmt) {
+	    var o = {
+	        "M+": this.getMonth() + 1, //月份 
+	        "d+": this.getDate(), //日 
+	        "h+": this.getHours(), //小时 
+	        "m+": this.getMinutes(), //分 
+	        "s+": this.getSeconds(), //秒 
+	        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+	        "S": this.getMilliseconds() //毫秒 
+	    };
+	    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+	    for (var k in o)
+	    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	    return fmt;
+	}
+	
+	function formatDate(d) {
+		return new Date(d - 28800000).Format("yyyy-MM-dd hh:mm:ss");
+	}
+	
+	$("#save").click(function () {
+		if ($("#oldpw").val() == '') {
+			showWarning("旧密码不能为空！");
+			return;
+		}
+		if ($("#newpw").val() == '') {
+			showWarning("新密码不能为空！");
+			return;
+		}
+		if ($("#newpw2").val() == '') {
+			showWarning("确认密码不能为空！");
+			return;
+		}
+		if ($("#newpw").val() != $("#newpw2").val()) {
+			showWarning("新密码与确认密码不一致！");
+			return;
+		}
+		$.ajax({
+			url: "${base!}/client/user/savePassword",
+			type: "post",
+			async: false,
+			data: {
+				"oldpw": $.md5($("#oldpw").val()),
+				"newpw": $.md5($("#newpw").val())
+			},
+			success: function (resp) {
+				var res = eval('('+resp+')');
+				if (res.code && res.code == '1') {
+					showInfo("密码修改成功！请重新登录");
+					setTimeout(function () {
+						window.location.href = "${base!}/logout";
+					}, 1500);
+				} else {
+					showInfo(res.message);
+				}
+			},
+			error: function () {
+				showError("提交失败，请稍后再试");
+			}
+		});
+	});
+</script>
+</html>

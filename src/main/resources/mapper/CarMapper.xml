@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.CarDao">
+
+    <select id="getCarInfoByPage" parameterType="Map" resultType="Map">
+		SELECT
+			c.ID,
+			u.NAME OWNER,
+			c.PLATE_NUM,
+			c.IDENTIFICATION_NUM,
+			c.BRAND,
+			c.TYPE,
+			c.COLOR,
+			c.VERIFIED,
+			c.STATUS,
+			c.DISABLED,
+			c.CREATE_TIME,
+			c.UPDATE_TIME 
+		FROM
+			EP_CAR c
+			LEFT JOIN ep_user u ON u.id = c.OWNER 
+		WHERE
+			c.STATUS = 1
+		<if test="owner != '' and owner != null">
+			AND u.NAME = #{owner}
+		</if>
+		<if test="plate_num != '' and plate_num != null">
+			AND c.PLATE_NUM = #{plate_num}
+		</if>
+		ORDER BY c.CREATE_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getCarInfo" parameterType="Map" resultType="Map">
+    	SELECT 
+			ID,
+			OWNER,
+			PLATE_NUM,
+			IDENTIFICATION_NUM,
+			BRAND,
+			TYPE,
+			COLOR,
+			VERIFIED,
+			STATUS,
+			DISABLED,
+			CREATE_TIME,
+			UPDATE_TIME
+		FROM
+			EP_CAR
+		WHERE
+			STATUS = '1'
+			AND DISABLED = '0'
+			<if test="id != '' and id != null">
+				AND ID = #{id}
+			</if>
+			<if test="owner != '' and owner != null">
+				AND OWNER = #{owner}
+			</if>
+			<if test="verified != '' and verified != null">
+				AND VERIFIED = #{verified}
+			</if>
+    </select>
+    
+    <select id="getCarInfoCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_CAR
+		WHERE
+			STATUS = 1
+		<if test="owner != '' and owner != null">
+			AND OWNER = #{owner}
+		</if>
+		<if test="plate_num != '' and plate_num != null">
+			AND PLATE_NUM = #{plate_num}
+		</if>
+    </select>
+    
+    <insert id="insertCar" parameterType="Map">
+    	INSERT INTO EP_CAR
+    		(ID, OWNER, PLATE_NUM, IDENTIFICATION_NUM, BRAND, TYPE, COLOR, IMAGE1, IMAGE2)
+    	VALUES
+			(#{id}, #{owner}, #{plate_num}, #{identification_num}, #{brand}, #{type}, #{color}, #{image1}, #{image2})
+    </insert>
+    
+    <update id="updateCar" parameterType="Map">
+    	UPDATE
+			EP_CAR
+    	SET
+			PLATE_NUM = #{plate_num},
+			IDENTIFICATION_NUM = #{identification_num},
+			BRAND = #{brand},
+			TYPE = #{type},
+			COLOR = #{color},
+			VERIFIED = 0
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="deleteCar" parameterType="Map">
+    	UPDATE
+			EP_CAR
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="enableCar" parameterType="Map">
+    	UPDATE
+			EP_CAR
+    	SET
+			DISABLED = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="disableCar" parameterType="Map">
+    	UPDATE
+			EP_CAR
+    	SET
+			DISABLED = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+</mapper>

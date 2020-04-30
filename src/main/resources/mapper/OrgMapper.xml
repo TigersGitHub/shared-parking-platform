@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyparking.dao.OrgDao">
+
+    <select id="getOrgInfoSelector" parameterType="Map" resultType="Map">
+		SELECT 
+			ID,
+			NAME,
+			SHORT_NAME,
+			TYPE,
+			CREDIT_CODE,
+			REGION,
+			ADDRESS,
+			LINKMAN,
+			PHONE_NUM
+		FROM
+			EP_ORG
+		WHERE
+			STATUS = '1' AND DISABLED = '0'
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="type != '' and type != null">
+			AND TYPE = #{type}
+		</if>
+		ORDER BY CREATE_TIME
+    </select>
+    
+    <select id="getOrgInfoByPage" parameterType="Map" resultType="Map">
+    	SELECT 
+			o.ID,
+			o.NAME,
+			o.SHORT_NAME,
+			o.TYPE,
+			o.CREDIT_CODE,
+			r.FULL_NAME REGION,
+			o.ADDRESS,
+			o.LINKMAN,
+			o.PHONE_NUM,
+			o.DISABLED,
+			o.STATUS,
+			o.CREATOR,
+			o.CREATE_TIME,
+			o.UPDATOR,
+			o.UPDATE_TIME
+		FROM
+			EP_ORG o
+			LEFT JOIN ep_region r on o.REGION = r.ID 
+		WHERE
+			o.STATUS = 1
+		<if test="name != '' and name != null">
+			AND o.NAME = #{name}
+		</if>
+		<if test="type != '' and type != null">
+			AND o.TYPE = #{type}
+		</if>
+		ORDER BY o.CREATE_TIME
+		limit #{start}, #{size}
+    </select>
+    
+    <select id="getOrgInfo" parameterType="Map" resultType="Map">
+    	SELECT 
+			ID,
+			NAME,
+			SHORT_NAME,
+			TYPE,
+			CREDIT_CODE,
+			REGION,
+			ADDRESS,
+			LINKMAN,
+			PHONE_NUM,
+			DISABLED,
+			STATUS,
+			CREATOR,
+			CREATE_TIME,
+			UPDATOR,
+			UPDATE_TIME
+		FROM
+			EP_ORG
+		WHERE
+			ID = #{id}
+    </select>
+    
+    <select id="getOrgInfoCount" parameterType="Map" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			EP_ORG
+		WHERE
+			STATUS = 1
+		<if test="name != '' and name != null">
+			AND NAME = #{name}
+		</if>
+		<if test="type != '' and type != null">
+			AND TYPE = #{type}
+		</if>
+    </select>
+    
+    <insert id="insertOrg" parameterType="Map">
+    	INSERT INTO EP_ORG
+    		(ID, ACCOUNT, NAME, PASSWORD, MOBILE, EMAIL, REGION, ADDRESS, TYPE, ORG_ID, CREATOR)
+    	VALUES
+			(#{id}, #{account}, #{name}, #{password}, #{mobile}, #{email}, #{region}, #{address}, #{type}, #{org_id}, #{creator})
+    </insert>
+    
+    <update id="updateOrg" parameterType="Map">
+    	UPDATE
+			EP_ORG
+    	SET
+			NAME = #{name},
+			SHORT_NAME = #{short_name},
+			TYPE = #{type},
+			CREDIT_CODE = #{credit_code},
+			LINKMAN = #{linkman},
+			PHONE_NUM = #{phone_num},
+			REGION = #{region},
+			ADDRESS = #{address},
+			UPDATOR = #{updator}
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="deleteOrg" parameterType="Map">
+    	UPDATE
+			EP_ORG
+    	SET
+			STATUS = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="enableOrg" parameterType="Map">
+    	UPDATE
+			EP_ORG
+    	SET
+			DISABLED = '0'
+		WHERE
+			ID = #{id}
+    </update>
+    
+    <update id="disableOrg" parameterType="Map">
+    	UPDATE
+			EP_ORG
+    	SET
+			DISABLED = '1'
+		WHERE
+			ID = #{id}
+    </update>
+    
+</mapper>

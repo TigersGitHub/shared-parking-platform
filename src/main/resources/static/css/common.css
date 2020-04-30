@@ -1,0 +1,118 @@
+body {
+	background-color: rgb(241, 241, 241);
+}
+.bg-dark {
+	background-color: rgb(52, 48, 45);
+}
+.bg-light {
+	background-color: rgb(241, 241, 241);
+}
+.text-blue {
+	color: rgb(0, 123, 193);
+}
+.text-require {
+	color: red;
+	padding-right: 3px;
+}
+a.text-blue:hover {
+	color: white;
+	text-decoration: none;
+}
+.text-white {
+	color: white;
+}
+.text-black {
+	color: black;
+}
+a.text-white:hover,
+a.text-black:hover {
+	color: rgb(0, 123, 193);
+	text-decoration: none;
+}
+.text-gray {
+	color: #999;
+}
+a.text-gray:hover {
+	color: #333;
+	text-decoration: none;
+}
+.data-panel {
+	margin: 9px;
+}
+.data-panel .tool-right {
+	display: inline-block;
+	float: right;
+}
+.data-panel .tool-right input {
+	display: inline-block;
+	width: 150px;
+}
+.data-panel .tool-right input[type='date'] {
+	display: inline-block;
+	width: 170px;
+}
+.data-panel .tool-right select {
+	display: inline-block;
+	width: 140px;
+	margin-top: -1px;
+}
+.data-panel .tool-right #search-btn {
+	margin-top: -4px;
+}
+.data-panel .panel-footer {
+	text-align: center;
+}
+.data-panel .pagination {
+	margin: 0;
+}
+i {
+	text-align: left;
+	width: 20px;
+}
+.data-panel td,
+.data-panel th {
+	text-align: center;
+}
+.data-panel .btn-xs {
+	margin-right: 2px;
+}
+.data-panel .total {
+	display: inline-block;
+	float: right;
+    margin: 8px 4px;
+}
+form label {
+	width: 22.5%;
+    padding: 8px 12px;
+}
+.modal form label {
+    text-align: right;
+}
+form .radio-label {
+	width: auto;
+    text-align: center;
+    padding: 8px 12px;
+}
+form input.form-control {
+	display: inline-block;
+    padding: 8px auto;
+}
+.modal form input.form-control {
+	width: 70%;	
+}
+form select.form-control {
+	display: inline-block;
+    padding: 8px auto;
+}
+.modal form select.form-control {
+	width: auto;
+}
+.data-panel .panel-footer {
+	padding: 8px 12px 4px 12px;
+}
+#first-page:hover,
+#previous-page:hover,
+#next-page:hover,
+#last-page:hover {
+	cursor: pointer;
+}
